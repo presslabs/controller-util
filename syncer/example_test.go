@@ -46,7 +46,9 @@ func NewDeploymentSyncer(owner runtime.Object) syncer.Interface {
 		},
 	}
 
-	return syncer.New("ExampleDeployment", owner, obj, func(existing runtime.Object) error {
+	// c is client.Client
+	// scheme is *runtime.Scheme
+	return syncer.NewObjectSyncer("ExampleDeployment", owner, obj, c, scheme, func(existing runtime.Object) error {
 		deploy := existing.(*appsv1.Deployment)
 
 		// Deployment selector is immutable so we set this value only if
@@ -78,14 +80,12 @@ func NewDeploymentSyncer(owner runtime.Object) syncer.Interface {
 	})
 }
 
-func ExampleNew() {
-	// c is client.Client
-	// scheme is *runtime.Scheme
+func ExampleNewObjectSyncer() {
 	// recorder is record.EventRecorder
 	// owner is the owner for the syncer subject
 
 	deploymentSyncer := NewDeploymentSyncer(owner)
-	err := syncer.Sync(context.TODO(), deploymentSyncer, c, scheme, recorder)
+	err := syncer.Sync(context.TODO(), deploymentSyncer, recorder)
 	if err != nil {
 		log.Error(err, "unable to sync")
 	}
