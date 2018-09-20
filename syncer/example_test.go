@@ -23,16 +23,14 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 
 	"github.com/presslabs/controller-util/syncer"
 )
 
 var (
-	c        client.Client
-	scheme   *runtime.Scheme
 	recorder record.EventRecorder
 	owner    runtime.Object
 	log      = logf.Log.WithName("controllerutil-examples")
@@ -47,8 +45,7 @@ func NewDeploymentSyncer(owner runtime.Object) syncer.Interface {
 	}
 
 	// c is client.Client
-	// scheme is *runtime.Scheme
-	return syncer.NewObjectSyncer("ExampleDeployment", owner, obj, c, scheme, func(existing runtime.Object) error {
+	return syncer.NewObjectSyncer("ExampleDeployment", owner, obj, c, scheme.Scheme, func(existing runtime.Object) error {
 		deploy := existing.(*appsv1.Deployment)
 
 		// Deployment selector is immutable so we set this value only if
