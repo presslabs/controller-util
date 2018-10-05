@@ -15,16 +15,19 @@ limitations under the License.
 */
 
 /*
-Package generator provides an interface and implementation to provision certificates.
+Package patch provides method to calculate JSON patch between 2 k8s objects.
 
-Create an instance of CertGenerator.
+Calculate JSON patch
 
-	cg := SelfSignedCertGenerator{}
-
-Generate the certificates.
-	certs, err := cg.Generate("foo.bar.com")
+	oldDeployment := appsv1.Deployment{
+		// some fields
+	}
+	newDeployment := appsv1.Deployment{
+		// some different fields
+	}
+	patch, err := NewJSONPatch(oldDeployment, newDeployment)
 	if err != nil {
 		// handle error
 	}
 */
-package generator
+package patch
