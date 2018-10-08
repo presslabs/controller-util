@@ -26,50 +26,42 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
-type transformerMap map[reflect.Type]func(dst, src reflect.Value) error
+// TransformerMap is a mergo.Transformers implementation
+type TransformerMap map[reflect.Type]func(dst, src reflect.Value) error
 
 // PodSpec mergo transformers for corev1.PodSpec
-var PodSpec transformerMap
+var PodSpec TransformerMap
 
 func init() {
-	PodSpec = transformerMap{
-		reflect.TypeOf([]corev1.Container{}):            PodSpec.mergeListByKey("Name"),
-		reflect.TypeOf([]corev1.ContainerPort{}):        PodSpec.mergeListByKey("ContainerPort"),
-		reflect.TypeOf([]corev1.EnvVar{}):               PodSpec.mergeListByKey("Name", mergo.WithOverride),
-		reflect.TypeOf(corev1.EnvVar{}):                 PodSpec.overrideFields("Value", "ValueFrom"),
-		reflect.TypeOf([]corev1.Toleration{}):           PodSpec.mergeListByKey("Key"),
-		reflect.TypeOf([]corev1.Volume{}):               PodSpec.mergeListByKey("Name"),
-		reflect.TypeOf([]corev1.LocalObjectReference{}): PodSpec.mergeListByKey("Name"),
-		reflect.TypeOf([]corev1.HostAlias{}):            PodSpec.mergeListByKey("IP"),
-		reflect.TypeOf([]corev1.VolumeMount{}):          PodSpec.mergeListByKey("MountPath"),
+	PodSpec = TransformerMap{
+		reflect.TypeOf([]corev1.Container{}):            PodSpec.MergeListByKey("Name"),
+		reflect.TypeOf([]corev1.ContainerPort{}):        PodSpec.MergeListByKey("ContainerPort"),
+		reflect.TypeOf([]corev1.EnvVar{}):               PodSpec.MergeListByKey("Name", mergo.WithOverride, mergo.WithAppendSlice),
+		reflect.TypeOf(corev1.EnvVar{}):                 PodSpec.OverrideFields("Value", "ValueFrom"),
+		reflect.TypeOf([]corev1.Toleration{}):           PodSpec.MergeListByKey("Key"),
+		reflect.TypeOf([]corev1.Volume{}):               PodSpec.MergeListByKey("Name"),
+		reflect.TypeOf([]corev1.LocalObjectReference{}): PodSpec.MergeListByKey("Name"),
+		reflect.TypeOf([]corev1.HostAlias{}):            PodSpec.MergeListByKey("IP"),
+		reflect.TypeOf([]corev1.VolumeMount{}):          PodSpec.MergeListByKey("MountPath"),
 	}
 }
 
-func (s transformerMap) Transformer(t reflect.Type) func(dst, src reflect.Value) error {
+// Transformer implements mergo.Tansformers interface for TransformenrMap
+func (s TransformerMap) Transformer(t reflect.Type) func(dst, src reflect.Value) error {
 	if fn, ok := s[t]; ok {
 		return fn
 	}
 	return nil
 }
 
-func (s *transformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ...func(*mergo.Config)) error {
+func (s *TransformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ...func(*mergo.Config)) error {
 	elemKey := elem.FieldByName(key)
 	for i := 0; i < dst.Len(); i++ {
 		dstKey := dst.Index(i).FieldByName(key)
 		if elemKey.Kind() != dstKey.Kind() {
 			return fmt.Errorf("cannot merge when key type differs")
 		}
-		eq := false
-		switch elemKey.Kind() {
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			eq = elemKey.Int() == dstKey.Int()
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			eq = elemKey.Uint() == dstKey.Uint()
-		case reflect.String:
-			eq = elemKey.String() == dstKey.String()
-		case reflect.Float32, reflect.Float64:
-			eq = elemKey.Float() == dstKey.Float()
-		}
+		eq := eq(key, elem, dst.Index(i))
 		if eq {
 			opts = append(opts, mergo.WithTransformers(s))
 			return mergo.Merge(dst.Index(i).Addr().Interface(), elem.Interface(), opts...)
@@ -79,20 +71,72 @@ func (s *transformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ..
 	return nil
 }
 
-func (s *transformerMap) mergeListByKey(key string, opts ...func(*mergo.Config)) func(_, _ reflect.Value) error {
+func eq(key string, a, b reflect.Value) bool {
+	aKey := a.FieldByName(key)
+	bKey := b.FieldByName(key)
+	if aKey.Kind() != bKey.Kind() {
+		return false
+	}
+	eq := false
+	switch aKey.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		eq = aKey.Int() == bKey.Int()
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		eq = aKey.Uint() == bKey.Uint()
+	case reflect.String:
+		eq = aKey.String() == bKey.String()
+	case reflect.Float32, reflect.Float64:
+		eq = aKey.Float() == bKey.Float()
+	}
+	return eq
+}
+
+func indexByKey(key string, v reflect.Value, list reflect.Value) (int, bool) {
+	for i := 0; i < list.Len(); i++ {
+		if eq(key, v, list.Index(i)) {
+			return i, true
+		}
+	}
+	return -1, false
+}
+
+// MergeListByKey merges two list by element key (eg. merge []corev1.Container
+// by name). If mergo.WithAppendSlice options is passed, the list is extended,
+// while elemnts with same name are merged. If not, the list is filtered to
+// elements in src
+func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config)) func(_, _ reflect.Value) error {
+	conf := &mergo.Config{}
+	for _, opt := range opts {
+		opt(conf)
+	}
 	return func(dst, src reflect.Value) error {
+		entries := make([]reflect.Value, src.Len())
 		for i := 0; i < src.Len(); i++ {
 			elem := src.Index(i)
 			err := s.mergeByKey(key, dst, elem, opts...)
 			if err != nil {
 				return err
 			}
+			j, found := indexByKey(key, elem, dst)
+			if found {
+				entries[i] = dst.Index(j)
+			}
 		}
+
+		if !conf.AppendSlice {
+			for i, elem := range entries {
+				dst.Index(i).Set(elem)
+			}
+			dst.SetLen(len(entries))
+			dst.SetCap(len(entries))
+		}
+
 		return nil
 	}
 }
 
-func (s *transformerMap) overrideFields(fields ...string) func(_, _ reflect.Value) error {
+// OverrideFields when merging override fields even if they are zero values (eg. nil or empty list)
+func (s *TransformerMap) OverrideFields(fields ...string) func(_, _ reflect.Value) error {
 	return func(dst, src reflect.Value) error {
 		for _, field := range fields {
 			srcValue := src.FieldByName(field)
