@@ -132,6 +132,13 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Containers[0].Name).To(Equal("new-helper"))
 		Expect(deployment.Spec.Template.Spec.Containers[0].Ports).To(HaveLen(2))
 	})
+	It("allows container image update", func() {
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		newSpec.Containers[0].Image = "main-image-v2"
+		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(deployment.Spec.Template.Spec.Containers[0].Name).To(Equal("main"))
+		Expect(deployment.Spec.Template.Spec.Containers[0].Image).To(Equal("main-image-v2"))
+	})
 	It("merges env vars", func() {
 		newSpec := corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -150,11 +157,9 @@ var _ = Describe("PodSpec Transformer", func() {
 
 		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 		Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(1))
-		Expect(deployment.Spec.Template.Spec.Containers[0].Env).To(HaveLen(2))
-		Expect(deployment.Spec.Template.Spec.Containers[0].Env[0].Name).To(Equal("TEST"))
-		Expect(deployment.Spec.Template.Spec.Containers[0].Env[0].Value).To(Equal("me"))
-		Expect(deployment.Spec.Template.Spec.Containers[0].Env[1].Name).To(Equal("TEST-2"))
-		Expect(deployment.Spec.Template.Spec.Containers[0].Env[1].Value).To(Equal("me-2"))
+		Expect(deployment.Spec.Template.Spec.Containers[0].Env).To(HaveLen(1))
+		Expect(deployment.Spec.Template.Spec.Containers[0].Env[0].Name).To(Equal("TEST-2"))
+		Expect(deployment.Spec.Template.Spec.Containers[0].Env[0].Value).To(Equal("me-2"))
 	})
 	It("merges container ports", func() {
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
