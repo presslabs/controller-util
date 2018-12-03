@@ -220,4 +220,18 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Volumes[1].EmptyDir).To(BeNil())
 		Expect(deployment.Spec.Template.Spec.Volumes[1].HostPath).ToNot(BeNil())
 	})
+	It("allows replacing volume list", func() {
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		newSpec.Volumes = []corev1.Volume{
+			{
+				Name: "config",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+		}
+		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(deployment.Spec.Template.Spec.Volumes).To(HaveLen(1))
+		Expect(deployment.Spec.Template.Spec.Volumes[0].Name).To(Equal(newSpec.Volumes[0].Name))
+	})
 })
