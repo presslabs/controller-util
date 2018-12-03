@@ -216,5 +216,8 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Volumes[0].Name).To(Equal(newSpec.Volumes[0].Name))
 		Expect(deployment.Spec.Template.Spec.Volumes[1].Name).To(Equal(newSpec.Volumes[1].Name))
 		Expect(deployment.Spec.Template.Spec.Volumes[2].Name).To(Equal(newSpec.Volumes[2].Name))
+
+		Expect(deployment.Spec.Template.Spec.Volumes[1].EmptyDir).To(BeNil())
+		Expect(deployment.Spec.Template.Spec.Volumes[1].HostPath).ToNot(BeNil())
 	})
 })
