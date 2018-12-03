@@ -72,6 +72,20 @@ var _ = Describe("PodSpec Transformer", func() {
 								},
 							},
 						},
+						Volumes: []corev1.Volume{
+							{
+								Name: "code",
+								VolumeSource: corev1.VolumeSource{
+									EmptyDir: &corev1.EmptyDirVolumeSource{},
+								},
+							},
+							{
+								Name: "media",
+								VolumeSource: corev1.VolumeSource{
+									EmptyDir: &corev1.EmptyDirVolumeSource{},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -174,5 +188,33 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(2))
 		Expect(deployment.Spec.Template.Spec.Containers[1].Ports).To(HaveLen(1))
 		Expect(deployment.Spec.Template.Spec.Containers[1].Ports[0].ContainerPort).To(Equal(int32(9125)))
+	})
+	It("allows prepending volume", func() {
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		newSpec.Volumes = []corev1.Volume{
+			{
+				Name: "config",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+			{
+				Name: "code",
+				VolumeSource: corev1.VolumeSource{
+					HostPath: &corev1.HostPathVolumeSource{},
+				},
+			},
+			{
+				Name: "media",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			},
+		}
+		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(deployment.Spec.Template.Spec.Volumes).To(HaveLen(3))
+		Expect(deployment.Spec.Template.Spec.Volumes[0].Name).To(Equal(newSpec.Volumes[0].Name))
+		Expect(deployment.Spec.Template.Spec.Volumes[1].Name).To(Equal(newSpec.Volumes[1].Name))
+		Expect(deployment.Spec.Template.Spec.Volumes[2].Name).To(Equal(newSpec.Volumes[2].Name))
 	})
 })

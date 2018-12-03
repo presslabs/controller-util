@@ -110,7 +110,7 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 		opt(conf)
 	}
 	return func(dst, src reflect.Value) error {
-		entries := make([]reflect.Value, src.Len())
+		entries := reflect.MakeSlice(src.Type(), src.Len(), src.Len())
 		for i := 0; i < src.Len(); i++ {
 			elem := src.Index(i)
 			err := s.mergeByKey(key, dst, elem, opts...)
@@ -119,16 +119,13 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 			}
 			j, found := indexByKey(key, elem, dst)
 			if found {
-				entries[i] = dst.Index(j)
+				entries.Index(i).Set(dst.Index(j))
 			}
 		}
-
 		if !conf.AppendSlice {
-			for i, elem := range entries {
-				dst.Index(i).Set(elem)
-			}
-			dst.SetLen(len(entries))
-			dst.SetCap(len(entries))
+			dst.SetLen(entries.Len())
+			dst.SetCap(entries.Cap())
+			dst.Set(entries)
 		}
 
 		return nil
