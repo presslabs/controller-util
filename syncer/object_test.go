@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+// nolint: errcheck
 package syncer_test
 
 import (
@@ -34,16 +35,24 @@ var _ = Describe("ObjectSyncer", func() {
 	var syncer *ObjectSyncer
 	var deployment *appsv1.Deployment
 	var recorder *record.FakeRecorder
+	var owner *corev1.ConfigMap
 	key := types.NamespacedName{Name: "example", Namespace: "default"}
 
 	BeforeEach(func() {
 		deployment = &appsv1.Deployment{}
 		recorder = record.NewFakeRecorder(100)
+		owner = &corev1.ConfigMap{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      key.Name,
+				Namespace: key.Namespace,
+			},
+		}
+		Expect(c.Create(context.TODO(), owner)).To(Succeed())
 	})
 
 	AfterEach(func() {
-		// nolint: errcheck
 		c.Delete(context.TODO(), deployment)
+		c.Delete(context.TODO(), owner)
 	})
 
 	When("syncing", func() {
@@ -64,13 +73,6 @@ var _ = Describe("ObjectSyncer", func() {
 		})
 
 		It("successfully creates an object and set owner references", func() {
-			owner := &corev1.ConfigMap{
-				ObjectMeta: metav1.ObjectMeta{
-					Name:      key.Name,
-					Namespace: key.Namespace,
-				},
-			}
-			Expect(c.Create(context.TODO(), owner)).To(Succeed())
 			syncer = NewDeploymentSyncer(owner).(*ObjectSyncer)
 			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
@@ -85,5 +87,35 @@ var _ = Describe("ObjectSyncer", func() {
 			Expect(event).To(ContainSubstring("ExampleDeploymentSyncSuccessfull"))
 			Expect(event).To(ContainSubstring("*v1.Deployment default/example created successfully"))
 		})
+
+		When("owner is deleted", func() {
+			BeforeEach(func() {
+				// set deletion timestamp on owner resource
+				now := metav1.Now()
+				owner.ObjectMeta.DeletionTimestamp = &now
+			})
+			It("should not create the resource if not exists", func() {
+				syncer = NewDeploymentSyncer(owner).(*ObjectSyncer)
+				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+
+				// check deployment is not created
+				Expect(c.Get(context.TODO(), key, deployment)).ToNot(Succeed())
+			})
+
+			It("should not set owner reference", func() {
+				// create the deployment
+				syncer = NewDeploymentSyncer(nil).(*ObjectSyncer)
+				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+
+				// try to set owner reference
+				syncer = NewDeploymentSyncer(owner).(*ObjectSyncer)
+				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+
+				// check deployment does not have owner reference set
+				Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
+				Expect(deployment.ObjectMeta.OwnerReferences).To(HaveLen(0))
+			})
+		})
+
 	})
 })
