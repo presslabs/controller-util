@@ -2,6 +2,14 @@
 
 
 [[projects]]
+  digest = "1:a5ced35ec731972db63b2b4bac7dcdca37654b065944227ebf7ddc89e5b05dbb"
+  name = "code.cloudfoundry.org/lager"
+  packages = ["."]
+  pruneopts = "T"
+  revision = "b152b7147a2a0154109a5194fcc7f4a933283abb"
+  version = "v2.0.0"
+
+[[projects]]
   digest = "1:9f42202ac457c462ad8bb9642806d275af9ab4850cf0b1960b9c6f083d4a309a"
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
@@ -611,6 +619,7 @@
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
+    "code.cloudfoundry.org/lager",
     "github.com/go-logr/logr",
     "github.com/go-logr/zapr",
     "github.com/go-test/deep",
