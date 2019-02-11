@@ -46,11 +46,9 @@ type Options struct {
 	ClientConfig *admissionregistrationv1beta1.WebhookClientConfig
 	// Objects are the objects that will use the ClientConfig above.
 	Objects []runtime.Object
-	// Dryrun controls if the objects are sent to the API server or write to io.Writer
-	Dryrun bool
 }
 
-// Provision provisions certificates for for the WebhookClientConfig.
+// Provision provisions certificates for the WebhookClientConfig.
 // It ensures the cert and CA are valid and not expiring.
 // It updates the CABundle in the webhookClientConfig if necessary.
 // It inject the WebhookClientConfig into options.Objects.
@@ -58,17 +56,13 @@ func (cp *Provisioner) Provision(options Options) (bool, error) {
 	if cp.CertWriter == nil {
 		return false, errors.New("CertWriter need to be set")
 	}
-	// If the objects need to be updated, just be lazy and return.
-	if len(options.Objects) == 0 {
-		return false, nil
-	}
 
 	dnsName, err := dnsNameFromClientConfig(options.ClientConfig)
 	if err != nil {
 		return false, err
 	}
 
-	certs, changed, err := cp.CertWriter.EnsureCert(dnsName, options.Dryrun)
+	certs, changed, err := cp.CertWriter.EnsureCert(dnsName)
 	if err != nil {
 		return false, err
 	}
