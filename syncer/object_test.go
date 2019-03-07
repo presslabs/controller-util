@@ -25,6 +25,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 
@@ -86,6 +87,21 @@ var _ = Describe("ObjectSyncer", func() {
 			Expect(recorder.Events).To(Receive(&event))
 			Expect(event).To(ContainSubstring("ExampleDeploymentSyncSuccessfull"))
 			Expect(event).To(ContainSubstring("*v1.Deployment default/example created successfully"))
+		})
+
+		It("should ignore ErrIgnore", func() {
+			obj := &appsv1.Deployment{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "example",
+					Namespace: "default",
+				},
+			}
+
+			syn := NewObjectSyncer("xxx", nil, obj, c, nil, func(_ runtime.Object) error {
+				return ErrIgnore
+			})
+
+			Expect(Sync(context.TODO(), syn, recorder)).To(Succeed())
 		})
 
 		When("owner is deleted", func() {
