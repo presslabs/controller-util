@@ -8,16 +8,22 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-type externalSyncer struct {
+// ExternalSyncer is a syncer.Interface for syncing external objects (non-kubernetes) by passing a SyncFn
+type ExternalSyncer struct {
 	name   string
 	obj    interface{}
 	owner  runtime.Object
 	syncFn func(context.Context, interface{}) (controllerutil.OperationResult, error)
 }
 
-func (s *externalSyncer) GetObject() interface{}   { return s.obj }
-func (s *externalSyncer) GetOwner() runtime.Object { return s.owner }
-func (s *externalSyncer) Sync(ctx context.Context) (SyncResult, error) {
+// GetObject returns the ExternalSyncer subject
+func (s *ExternalSyncer) GetObject() interface{} { return s.obj }
+
+// GetOwner returns the ExternalSyncer owner
+func (s *ExternalSyncer) GetOwner() runtime.Object { return s.owner }
+
+// Sync does the actual syncing and implements the syncer.Inteface Sync method
+func (s *ExternalSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	var err error
 	result := SyncResult{}
 	result.Operation, err = s.syncFn(ctx, s.obj)
@@ -40,7 +46,7 @@ func (s *externalSyncer) Sync(ctx context.Context) (SyncResult, error) {
 // and event emitting purposes and should be an valid go identifier in upper
 // camel case. (eg. GiteaRepo)
 func NewExternalSyncer(name string, owner runtime.Object, obj interface{}, syncFn func(context.Context, interface{}) (controllerutil.OperationResult, error)) Interface {
-	return &externalSyncer{
+	return &ExternalSyncer{
 		name:   name,
 		obj:    obj,
 		owner:  owner,
