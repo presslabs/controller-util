@@ -51,11 +51,12 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	diff := deep.Equal(s.previousObject, s.Obj)
 
 	// don't pass to user error for owner deletion, just don't create the object
+	// nolint: gocritic
 	if err == errOwnerDeleted {
 		log.Info(string(result.Operation), "key", key, "kind", fmt.Sprintf("%T", s.Obj), "error", err)
 		err = nil
 	} else if err == ErrIgnore {
-		log.V(1).Info("syncer skiped", "key", key, "kind", fmt.Sprintf("%T", s.Obj))
+		log.V(1).Info("syncer skipped", "key", key, "kind", fmt.Sprintf("%T", s.Obj))
 		err = nil
 	} else if err != nil {
 		result.SetEventData(eventWarning, basicEventReason(s.Name, err),
@@ -73,16 +74,16 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 // Given an ObjectSyncer, returns a controllerutil.MutateFn which also sets the
 // owner reference if the subject has one
 func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
-	return func(existing runtime.Object) error {
-		s.previousObject = existing.DeepCopyObject()
-		err := s.SyncFn(existing)
+	return func() error {
+		s.previousObject = s.Obj.DeepCopyObject()
+		err := s.SyncFn()
 		if err != nil {
 			return err
 		}
 		if s.Owner != nil {
-			existingMeta, ok := existing.(metav1.Object)
+			existingMeta, ok := s.Obj.(metav1.Object)
 			if !ok {
-				return fmt.Errorf("%T is not a metav1.Object", existing)
+				return fmt.Errorf("%T is not a metav1.Object", s.Obj)
 			}
 			ownerMeta, ok := s.Owner.(metav1.Object)
 			if !ok {

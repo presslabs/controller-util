@@ -37,7 +37,7 @@ var (
 )
 
 func NewDeploymentSyncer(owner runtime.Object) syncer.Interface {
-	obj := &appsv1.Deployment{
+	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example",
 			Namespace: "default",
@@ -45,9 +45,7 @@ func NewDeploymentSyncer(owner runtime.Object) syncer.Interface {
 	}
 
 	// c is client.Client
-	return syncer.NewObjectSyncer("ExampleDeployment", owner, obj, c, scheme.Scheme, func(existing runtime.Object) error {
-		deploy := existing.(*appsv1.Deployment)
-
+	return syncer.NewObjectSyncer("ExampleDeployment", owner, deploy, c, scheme.Scheme, func() error {
 		// Deployment selector is immutable so we set this value only if
 		// a new object is going to be created
 		if deploy.ObjectMeta.CreationTimestamp.IsZero() {

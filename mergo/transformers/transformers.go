@@ -32,7 +32,7 @@ type TransformerMap map[reflect.Type]func(dst, src reflect.Value) error
 // PodSpec mergo transformers for corev1.PodSpec
 var PodSpec TransformerMap
 
-func init() {
+func init() { // nolint: gochecknoinits
 	PodSpec = TransformerMap{
 		reflect.TypeOf([]corev1.Container{}):            PodSpec.MergeListByKey("Name", mergo.WithOverride),
 		reflect.TypeOf([]corev1.ContainerPort{}):        PodSpec.MergeListByKey("ContainerPort", mergo.WithOverride),

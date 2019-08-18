@@ -57,7 +57,7 @@ var _ = Describe("Meta Package Finalizer", func() {
 	},
 		Entry("no remove if not present", []string{"f1", "f2"}, []string{"f1", "f2"}),
 		Entry("remove from middle", []string{"f1", fin, "f2"}, []string{"f1", "f2"}),
-		Entry("remove from beggin", []string{fin, "f1", "f2"}, []string{"f1", "f2"}),
+		Entry("remove from begin", []string{fin, "f1", "f2"}, []string{"f1", "f2"}),
 		Entry("remove from end", []string{"f1", "f2", fin}, []string{"f1", "f2"}),
 	)
 })
