@@ -19,6 +19,7 @@ func (s *externalSyncer) GetObject() interface{}   { return s.obj }
 func (s *externalSyncer) GetOwner() runtime.Object { return s.owner }
 func (s *externalSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	var err error
+
 	result := SyncResult{}
 	result.Operation, err = s.syncFn(ctx, s.obj)
 
