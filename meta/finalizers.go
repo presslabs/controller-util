@@ -44,17 +44,21 @@ func containsString(slice []string, s string) bool {
 			return true
 		}
 	}
+
 	return false
 }
 
 // removeString is a helper functions to remove string from a slice of strings.
 func removeString(slice []string, s string) []string {
 	result := []string{}
+
 	for _, item := range slice {
 		if item == s {
 			continue
 		}
+
 		result = append(result, item)
 	}
+
 	return result
 }

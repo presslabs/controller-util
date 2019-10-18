@@ -52,33 +52,42 @@ func (s TransformerMap) Transformer(t reflect.Type) func(dst, src reflect.Value)
 	if fn, ok := s[t]; ok {
 		return fn
 	}
+
 	return nil
 }
 
 func (s *TransformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ...func(*mergo.Config)) error {
 	elemKey := elem.FieldByName(key)
+
 	for i := 0; i < dst.Len(); i++ {
 		dstKey := dst.Index(i).FieldByName(key)
+
 		if elemKey.Kind() != dstKey.Kind() {
 			return fmt.Errorf("cannot merge when key type differs")
 		}
+
 		eq := eq(key, elem, dst.Index(i))
 		if eq {
 			opts = append(opts, mergo.WithTransformers(s))
 			return mergo.Merge(dst.Index(i).Addr().Interface(), elem.Interface(), opts...)
 		}
 	}
+
 	dst.Set(reflect.Append(dst, elem))
+
 	return nil
 }
 
 func eq(key string, a, b reflect.Value) bool {
 	aKey := a.FieldByName(key)
 	bKey := b.FieldByName(key)
+
 	if aKey.Kind() != bKey.Kind() {
 		return false
 	}
+
 	eq := false
+
 	switch aKey.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		eq = aKey.Int() == bKey.Int()
@@ -89,6 +98,7 @@ func eq(key string, a, b reflect.Value) bool {
 	case reflect.Float32, reflect.Float64:
 		eq = aKey.Float() == bKey.Float()
 	}
+
 	return eq
 }
 
@@ -98,6 +108,7 @@ func indexByKey(key string, v reflect.Value, list reflect.Value) (int, bool) {
 			return i, true
 		}
 	}
+
 	return -1, false
 }
 
@@ -107,11 +118,14 @@ func indexByKey(key string, v reflect.Value, list reflect.Value) (int, bool) {
 // elements in src
 func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config)) func(_, _ reflect.Value) error {
 	conf := &mergo.Config{}
+
 	for _, opt := range opts {
 		opt(conf)
 	}
+
 	return func(dst, src reflect.Value) error {
 		entries := reflect.MakeSlice(src.Type(), src.Len(), src.Len())
+
 		for i := 0; i < src.Len(); i++ {
 			elem := src.Index(i)
 			err := s.mergeByKey(key, dst, elem, opts...)
@@ -123,6 +137,7 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 				entries.Index(i).Set(dst.Index(j))
 			}
 		}
+
 		if !conf.AppendSlice {
 			dst.SetLen(entries.Len())
 			dst.SetCap(entries.Cap())
@@ -152,6 +167,7 @@ func (s *TransformerMap) NilOtherFields(opts ...func(*mergo.Config)) func(_, _ r
 				}
 			}
 		}
+
 		return nil
 	}
 }
@@ -163,6 +179,7 @@ func (s *TransformerMap) OverrideFields(fields ...string) func(_, _ reflect.Valu
 			srcValue := src.FieldByName(field)
 			dst.FieldByName(field).Set(srcValue)
 		}
+
 		return nil
 	}
 }

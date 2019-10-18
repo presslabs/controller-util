@@ -38,6 +38,7 @@ const (
 
 func getKey(obj runtime.Object) (types.NamespacedName, error) {
 	key := types.NamespacedName{}
+
 	objMeta, ok := obj.(metav1.Object)
 	if !ok {
 		return key, fmt.Errorf("%T is not a metav1.Object", obj)
@@ -45,6 +46,7 @@ func getKey(obj runtime.Object) (types.NamespacedName, error) {
 
 	key.Name = objMeta.GetName()
 	key.Namespace = objMeta.GetNamespace()
+
 	return key, nil
 }
 
@@ -52,6 +54,7 @@ func basicEventReason(objKindName string, err error) string {
 	if err != nil {
 		return fmt.Sprintf("%sSyncFailed", strcase.ToCamel(objKindName))
 	}
+
 	return fmt.Sprintf("%sSyncSuccessfull", strcase.ToCamel(objKindName))
 }
 

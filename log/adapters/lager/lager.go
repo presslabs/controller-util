@@ -23,12 +23,14 @@ func dataToFields(data ...lager.Data) (fields []zap.Field) {
 			fields = append(fields, zap.Any(k, v))
 		}
 	}
+
 	return fields
 }
 
 // NewZapAdapter creates a new ZapAdapter using the passed in zap.Logger
 func NewZapAdapter(component string, zapLogger *zap.Logger) *ZapAdapter {
 	logger := zapLogger.Named(component)
+
 	return &ZapAdapter{
 		sessionID:  component,
 		Logger:     logger,
@@ -49,6 +51,7 @@ func (l *ZapAdapter) Session(task string, data ...lager.Data) lager.Logger {
 		Logger:     l.origLogger.Named(task),
 		context:    append(l.context, dataToFields(data...)...),
 	}
+
 	return logger
 }
 
@@ -65,6 +68,7 @@ func (l *ZapAdapter) WithData(data lager.Data) lager.Logger {
 		Logger:     l.origLogger.With(dataToFields(data)...),
 		context:    l.context,
 	}
+
 	return logger
 }
 
