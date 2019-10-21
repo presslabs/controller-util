@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/go-test/deep"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -30,6 +31,20 @@ type ObjectSyncer struct {
 	previousObject runtime.Object
 }
 
+// objectWithoutSecretData returns the object without secretData
+func objectWithoutSecretData(obj runtime.Object) runtime.Object {
+	// if obj is secret, don't print secret data
+	s, ok := obj.(*corev1.Secret)
+	if ok {
+		s.Data = nil
+		s.StringData = nil
+
+		return s
+	}
+
+	return obj
+}
+
 // GetObject returns the ObjectSyncer subject
 func (s *ObjectSyncer) GetObject() interface{} { return s.Obj }
 
@@ -48,7 +63,7 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	result.Operation, err = controllerutil.CreateOrUpdate(ctx, s.Client, s.Obj, s.mutateFn())
 
 	// check deep diff
-	diff := deep.Equal(s.previousObject, s.Obj)
+	diff := deep.Equal(objectWithoutSecretData(s.previousObject), objectWithoutSecretData(s.Obj))
 
 	// don't pass to user error for owner deletion, just don't create the object
 	// nolint: gocritic

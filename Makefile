@@ -10,12 +10,12 @@ SHELL := env PATH=$(PATH) /bin/sh
 all: lint
 
 lint:
-	$(BINDIR)/golangci-lint run ./...
+	GO111MODULE=on $(BINDIR)/golangci-lint run ./...
 
 test:
-	KUBEBUILDER_ASSETS=$(BINDIR) ginkgo \
+	GO111MODULE=on KUBEBUILDER_ASSETS=$(BINDIR) ginkgo \
 		--randomizeAllSpecs --randomizeSuites --failOnPending \
-		--cover --coverprofile cover.out --trace --race -v \
+		--cover --coverprofile cover.out --trace --race \
 		./...
 
 dependencies:
