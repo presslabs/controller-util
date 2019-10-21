@@ -26,6 +26,7 @@ linters:
     - goimports
     - maligned
     - gochecknoglobals
+    - godox
 
 issues:
   max-same-issues: 0

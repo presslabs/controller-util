@@ -26,6 +26,10 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+
+	// TODO: Controller-runtime/log is deprecated. We should use pkg/log/
+	// Issue: https://github.com/presslabs/controller-util/issues/16
+	// nolint: staticcheck
 	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 )
 
