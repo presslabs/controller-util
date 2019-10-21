@@ -46,10 +46,29 @@ func objectWithoutSecretData(obj runtime.Object) runtime.Object {
 }
 
 // GetObject returns the ObjectSyncer subject
-func (s *ObjectSyncer) GetObject() interface{} { return s.Obj }
+func (s *ObjectSyncer) GetObject() interface{} {
+	return objectWithoutSecretData(s.Obj)
+}
+
+// GetPreviousObject returns the ObjectSyncer previous subject
+func (s *ObjectSyncer) GetPreviousObject() interface{} {
+	return objectWithoutSecretData(s.previousObject)
+}
+
+// GetObjectType returns the type of the ObjectSyncer subject
+func (s *ObjectSyncer) GetObjectType() string {
+	return fmt.Sprintf("%T", s.Obj)
+}
 
 // GetOwner returns the ObjectSyncer owner
-func (s *ObjectSyncer) GetOwner() runtime.Object { return s.Owner }
+func (s *ObjectSyncer) GetOwner() runtime.Object {
+	return s.Owner
+}
+
+// GetOwnerType returns the type of the ObjectSyncer owner
+func (s *ObjectSyncer) GetOwnerType() string {
+	return fmt.Sprintf("%T", s.Owner)
+}
 
 // Sync does the actual syncing and implements the syncer.Inteface Sync method
 func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
@@ -63,24 +82,24 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	result.Operation, err = controllerutil.CreateOrUpdate(ctx, s.Client, s.Obj, s.mutateFn())
 
 	// check deep diff
-	diff := deep.Equal(objectWithoutSecretData(s.previousObject), objectWithoutSecretData(s.Obj))
+	diff := deep.Equal(s.GetPreviousObject(), s.GetObject())
 
 	// don't pass to user error for owner deletion, just don't create the object
 	// nolint: gocritic
 	if err == errOwnerDeleted {
-		log.Info(string(result.Operation), "key", key, "kind", fmt.Sprintf("%T", s.Obj), "error", err)
+		log.Info(string(result.Operation), "key", key, "kind", s.GetObjectType(), "error", err)
 		err = nil
 	} else if err == ErrIgnore {
-		log.V(1).Info("syncer skipped", "key", key, "kind", fmt.Sprintf("%T", s.Obj))
+		log.V(1).Info("syncer skipped", "key", key, "kind", s.GetObjectType())
 		err = nil
 	} else if err != nil {
 		result.SetEventData(eventWarning, basicEventReason(s.Name, err),
-			fmt.Sprintf("%T %s failed syncing: %s", s.Obj, key, err))
-		log.Error(err, string(result.Operation), "key", key, "kind", fmt.Sprintf("%T", s.Obj), "diff", diff)
+			fmt.Sprintf("%s %s failed syncing: %s", s.GetObjectType(), key, err))
+		log.Error(err, string(result.Operation), "key", key, "kind", s.GetObjectType(), "diff", diff)
 	} else {
 		result.SetEventData(eventNormal, basicEventReason(s.Name, err),
-			fmt.Sprintf("%T %s %s successfully", s.Obj, key, result.Operation))
-		log.V(1).Info(string(result.Operation), "key", key, "kind", fmt.Sprintf("%T", s.Obj), "diff", diff)
+			fmt.Sprintf("%s %s %s successfully", s.GetObjectType(), key, result.Operation))
+		log.V(1).Info(string(result.Operation), "key", key, "kind", s.GetObjectType(), "diff", diff)
 	}
 
 	return result, err
@@ -98,11 +117,11 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 		if s.Owner != nil {
 			existingMeta, ok := s.Obj.(metav1.Object)
 			if !ok {
-				return fmt.Errorf("%T is not a metav1.Object", s.Obj)
+				return fmt.Errorf("%s is not a metav1.Object", s.GetObjectType())
 			}
 			ownerMeta, ok := s.Owner.(metav1.Object)
 			if !ok {
-				return fmt.Errorf("%T is not a metav1.Object", s.Owner)
+				return fmt.Errorf("%s is not a metav1.Object", s.GetOwnerType())
 			}
 
 			// set owner reference only if owner resource is not being deleted, otherwise the owner
@@ -126,7 +145,8 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 // with an owner and persists data using controller-runtime's CreateOrUpdate.
 // The name is used for logging and event emitting purposes and should be an
 // valid go identifier in upper camel case. (eg. MysqlStatefulSet)
-func NewObjectSyncer(name string, owner, obj runtime.Object, c client.Client, scheme *runtime.Scheme, syncFn controllerutil.MutateFn) Interface {
+func NewObjectSyncer(name string, owner, obj runtime.Object, c client.Client, scheme *runtime.Scheme,
+	syncFn controllerutil.MutateFn) Interface {
 	return &ObjectSyncer{
 		Owner:  owner,
 		Obj:    obj,
