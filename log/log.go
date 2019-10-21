@@ -26,33 +26,27 @@ var (
 	// Log is the base logger used by kubebuilder.  It delegates
 	// to another logr.Logger.  You *must* call SetLogger to
 	// get any actual logging.
-	// Deprecated: use sigs.k8s.io/controller-runtime/pkg/log.Log instead
 	Log = log.Log
 
 	// KBLog is a base parent logger.
-	// Deprecated: create your own logger. This will be removed
 	KBLog logr.Logger
 
 	// SetLogger sets a concrete logging implementation for all deferred Loggers.
-	// Deprecated: use sigs.k8s.io/controller-runtime/pkg/log.SetLogger instead
 	SetLogger = log.SetLogger
 
 	// ZapLogger is a Logger implementation.
 	// If development is true, a Zap development config will be used
 	// (stacktraces on warnings, no sampling), otherwise a Zap production
 	// config will be used (stacktraces on errors, sampling).
-	// Deprecated: use sigs.k8s.io/controller-runtime/pkg/log/zap.Logger instead
 	ZapLogger = zaplog.Logger
 
 	// ZapLoggerTo returns a new Logger implementation using Zap which logs
 	// to the given destination, instead of stderr.  It otherwise behaves like
 	// ZapLogger.
-	// Deprecated: use sigs.k8s.io/controller-runtime/pkg/log/zap.LoggerTo instead
 	ZapLoggerTo = zaplog.LoggerTo
 
 	// RawZapLoggerTo returns a new zap.Logger configured with KubeAwareEncoder
 	// which logs to a given destination
-	// Deprecated: use sigs.k8s.io/controller-runtime/pkg/log/zap.RawLoggerTo instead
 	RawZapLoggerTo = zaplog.RawLoggerTo
 )
 
