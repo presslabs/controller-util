@@ -26,5 +26,5 @@ import (
 
 func TestV1alpha1(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "mergo transformers suite", []Reporter{envtest.NewlineReporter{}})
+	RunSpecsWithDefaultAndCustomReporters(t, "Mergo transformers suite", []Reporter{envtest.NewlineReporter{}})
 }
