@@ -31,8 +31,8 @@ type ObjectSyncer struct {
 	previousObject runtime.Object
 }
 
-// objectWithoutSecretData returns the object without secretData
-func objectWithoutSecretData(obj runtime.Object) runtime.Object {
+// stripSecrets returns the object without secretData
+func stripSecrets(obj runtime.Object) runtime.Object {
 	// if obj is secret, don't print secret data
 	s, ok := obj.(*corev1.Secret)
 	if ok {
@@ -47,12 +47,12 @@ func objectWithoutSecretData(obj runtime.Object) runtime.Object {
 
 // GetObject returns the ObjectSyncer subject
 func (s *ObjectSyncer) GetObject() interface{} {
-	return objectWithoutSecretData(s.Obj)
+	return stripSecrets(s.Obj)
 }
 
 // GetPreviousObject returns the ObjectSyncer previous subject
 func (s *ObjectSyncer) GetPreviousObject() interface{} {
-	return objectWithoutSecretData(s.previousObject)
+	return stripSecrets(s.previousObject)
 }
 
 // GetObjectType returns the type of the ObjectSyncer subject
