@@ -44,6 +44,8 @@ func (r *SyncResult) SetEventData(eventType, reason, message string) {
 type Interface interface {
 	// GetObject returns the object for which sync applies
 	GetObject() interface{}
+	// GetObjectType returns the type of the object for which sync applies
+	GetObjectType() string
 	// GetOwner returns the object owner or nil if object does not have one
 	GetOwner() runtime.Object
 	// Sync persists data into the external store
