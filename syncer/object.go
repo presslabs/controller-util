@@ -1,3 +1,19 @@
+/*
+Copyright 2018 Pressinfra SRL.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
 package syncer
 
 import (
@@ -45,28 +61,28 @@ func stripSecrets(obj runtime.Object) runtime.Object {
 	return obj
 }
 
-// GetObject returns the ObjectSyncer subject
-func (s *ObjectSyncer) GetObject() interface{} {
+// Object returns the ObjectSyncer subject
+func (s *ObjectSyncer) Object() interface{} {
 	return stripSecrets(s.Obj)
 }
 
-// GetPreviousObject returns the ObjectSyncer previous subject
-func (s *ObjectSyncer) GetPreviousObject() interface{} {
+// PreviousObject returns the ObjectSyncer previous subject
+func (s *ObjectSyncer) PreviousObject() interface{} {
 	return stripSecrets(s.previousObject)
 }
 
-// GetObjectType returns the type of the ObjectSyncer subject
-func (s *ObjectSyncer) GetObjectType() string {
+// ObjectType returns the type of the ObjectSyncer subject
+func (s *ObjectSyncer) ObjectType() string {
 	return fmt.Sprintf("%T", s.Obj)
 }
 
-// GetOwner returns the ObjectSyncer owner
-func (s *ObjectSyncer) GetOwner() runtime.Object {
+// ObjectOwner returns the ObjectSyncer owner
+func (s *ObjectSyncer) ObjectOwner() runtime.Object {
 	return s.Owner
 }
 
-// GetOwnerType returns the type of the ObjectSyncer owner
-func (s *ObjectSyncer) GetOwnerType() string {
+// ObjectOwnerType returns the type of the ObjectSyncer owner
+func (s *ObjectSyncer) ObjectOwnerType() string {
 	return fmt.Sprintf("%T", s.Owner)
 }
 
@@ -82,24 +98,24 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	result.Operation, err = controllerutil.CreateOrUpdate(ctx, s.Client, s.Obj, s.mutateFn())
 
 	// check deep diff
-	diff := deep.Equal(s.GetPreviousObject(), s.GetObject())
+	diff := deep.Equal(s.PreviousObject(), s.Object())
 
 	// don't pass to user error for owner deletion, just don't create the object
 	// nolint: gocritic
 	if err == errOwnerDeleted {
-		log.Info(string(result.Operation), "key", key, "kind", s.GetObjectType(), "error", err)
+		log.Info(string(result.Operation), "key", key, "kind", s.ObjectType(), "error", err)
 		err = nil
 	} else if err == ErrIgnore {
-		log.V(1).Info("syncer skipped", "key", key, "kind", s.GetObjectType())
+		log.V(1).Info("syncer skipped", "key", key, "kind", s.ObjectType())
 		err = nil
 	} else if err != nil {
 		result.SetEventData(eventWarning, basicEventReason(s.Name, err),
-			fmt.Sprintf("%s %s failed syncing: %s", s.GetObjectType(), key, err))
-		log.Error(err, string(result.Operation), "key", key, "kind", s.GetObjectType(), "diff", diff)
+			fmt.Sprintf("%s %s failed syncing: %s", s.ObjectType(), key, err))
+		log.Error(err, string(result.Operation), "key", key, "kind", s.ObjectType(), "diff", diff)
 	} else {
 		result.SetEventData(eventNormal, basicEventReason(s.Name, err),
-			fmt.Sprintf("%s %s %s successfully", s.GetObjectType(), key, result.Operation))
-		log.V(1).Info(string(result.Operation), "key", key, "kind", s.GetObjectType(), "diff", diff)
+			fmt.Sprintf("%s %s %s successfully", s.ObjectType(), key, result.Operation))
+		log.V(1).Info(string(result.Operation), "key", key, "kind", s.ObjectType(), "diff", diff)
 	}
 
 	return result, err
@@ -110,18 +126,21 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 	return func() error {
 		s.previousObject = s.Obj.DeepCopyObject()
+
 		err := s.SyncFn()
 		if err != nil {
 			return err
 		}
+
 		if s.Owner != nil {
 			existingMeta, ok := s.Obj.(metav1.Object)
 			if !ok {
-				return fmt.Errorf("%s is not a metav1.Object", s.GetObjectType())
+				return fmt.Errorf("%s is not a metav1.Object", s.ObjectType())
 			}
+
 			ownerMeta, ok := s.Owner.(metav1.Object)
 			if !ok {
-				return fmt.Errorf("%s is not a metav1.Object", s.GetOwnerType())
+				return fmt.Errorf("%s is not a metav1.Object", s.ObjectOwnerType())
 			}
 
 			// set owner reference only if owner resource is not being deleted, otherwise the owner
@@ -137,6 +156,7 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 				return errOwnerDeleted
 			}
 		}
+
 		return nil
 	}
 }
