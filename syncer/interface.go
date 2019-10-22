@@ -42,12 +42,27 @@ func (r *SyncResult) SetEventData(eventType, reason, message string) {
 // (known as subject), into a store (kubernetes apiserver or generic stores)
 // and records kubernetes events
 type Interface interface {
+	// Object returns the object for which sync applies
+	Object() interface{}
+
 	// GetObject returns the object for which sync applies
+	// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead
 	GetObject() interface{}
+
+	// ObjectType returns the type of the object for which sync applies
+	ObjectType() string
+
 	// GetObjectType returns the type of the object for which sync applies
+	// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectType() instead
 	GetObjectType() string
+
+	// Owner returns the object owner or nil if object does not have one
+	ObjectOwner() runtime.Object
+
 	// GetOwner returns the object owner or nil if object does not have one
+	// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead
 	GetOwner() runtime.Object
+
 	// Sync persists data into the external store
 	Sync(context.Context) (SyncResult, error)
 }
