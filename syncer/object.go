@@ -63,11 +63,21 @@ func stripSecrets(obj runtime.Object) runtime.Object {
 
 // Object returns the ObjectSyncer subject
 func (s *ObjectSyncer) Object() interface{} {
+	return s.Obj
+}
+
+// ObjectOwner returns the ObjectSyncer owner
+func (s *ObjectSyncer) ObjectOwner() runtime.Object {
+	return s.Owner
+}
+
+// ObjectWithoutSecretData returns the ObjectSyncer subject without secret data
+func (s *ObjectSyncer) ObjectWithoutSecretData() interface{} {
 	return stripSecrets(s.Obj)
 }
 
-// PreviousObject returns the ObjectSyncer previous subject
-func (s *ObjectSyncer) PreviousObject() interface{} {
+// PreviousWithoutSecretData returns the ObjectSyncer previous subject without secret data
+func (s *ObjectSyncer) PreviousWithoutSecretData() interface{} {
 	return stripSecrets(s.previousObject)
 }
 
@@ -76,13 +86,8 @@ func (s *ObjectSyncer) ObjectType() string {
 	return fmt.Sprintf("%T", s.Obj)
 }
 
-// ObjectOwner returns the ObjectSyncer owner
-func (s *ObjectSyncer) ObjectOwner() runtime.Object {
-	return s.Owner
-}
-
-// ObjectOwnerType returns the type of the ObjectSyncer owner
-func (s *ObjectSyncer) ObjectOwnerType() string {
+// OwnerType returns the type of the ObjectSyncer owner
+func (s *ObjectSyncer) OwnerType() string {
 	return fmt.Sprintf("%T", s.Owner)
 }
 
@@ -98,7 +103,7 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	result.Operation, err = controllerutil.CreateOrUpdate(ctx, s.Client, s.Obj, s.mutateFn())
 
 	// check deep diff
-	diff := deep.Equal(s.PreviousObject(), s.Object())
+	diff := deep.Equal(s.PreviousWithoutSecretData(), s.ObjectWithoutSecretData())
 
 	// don't pass to user error for owner deletion, just don't create the object
 	// nolint: gocritic
@@ -140,7 +145,7 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 
 			ownerMeta, ok := s.Owner.(metav1.Object)
 			if !ok {
-				return fmt.Errorf("%s is not a metav1.Object", s.ObjectOwnerType())
+				return fmt.Errorf("%s is not a metav1.Object", s.OwnerType())
 			}
 
 			// set owner reference only if owner resource is not being deleted, otherwise the owner
