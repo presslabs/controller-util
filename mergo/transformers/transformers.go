@@ -22,7 +22,6 @@ import (
 	"reflect"
 
 	"github.com/imdario/mergo"
-
 	corev1 "k8s.io/api/core/v1"
 )
 
