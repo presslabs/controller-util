@@ -25,11 +25,6 @@ func (s *externalSyncer) GetObject() interface{} {
 	return s.Object()
 }
 
-// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectType() instead
-func (s *externalSyncer) GetObjectType() string {
-	return s.ObjectType()
-}
-
 // Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead
 func (s *externalSyncer) GetOwner() runtime.Object {
 	return s.ObjectOwner()
