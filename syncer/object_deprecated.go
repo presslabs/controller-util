@@ -26,26 +26,8 @@ func (s *ObjectSyncer) GetObject() interface{} {
 	return s.Object()
 }
 
-// GetPreviousObject returns the ObjectSyncer previous subject
-// Deprecated: use github.com/presslabs/controller-util/syncer.PreviousObject() instead
-func (s *ObjectSyncer) GetPreviousObject() interface{} {
-	return s.PreviousObject()
-}
-
-// GetObjectType returns the type of the ObjectSyncer subject
-// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectType() instead
-func (s *ObjectSyncer) GetObjectType() string {
-	return s.ObjectType()
-}
-
 // GetOwner returns the ObjectSyncer owner
 // Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead
 func (s *ObjectSyncer) GetOwner() runtime.Object {
 	return s.ObjectOwner()
-}
-
-// GetOwnerType returns the type of the ObjectSyncer owner
-// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwnerType() instead
-func (s *ObjectSyncer) GetOwnerType() string {
-	return s.ObjectOwnerType()
 }
