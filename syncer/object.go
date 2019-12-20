@@ -47,15 +47,16 @@ type ObjectSyncer struct {
 	previousObject runtime.Object
 }
 
-// stripSecrets returns the object without secretData
+// stripSecrets returns a copy for the secret without secret data in it
 func stripSecrets(obj runtime.Object) runtime.Object {
 	// if obj is secret, don't print secret data
 	s, ok := obj.(*corev1.Secret)
 	if ok {
-		s.Data = nil
-		s.StringData = nil
+		cObj := s.DeepCopyObject().(*corev1.Secret)
+		cObj.Data = nil
+		cObj.StringData = nil
 
-		return s
+		return cObj
 	}
 
 	return obj

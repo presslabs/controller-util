@@ -66,6 +66,7 @@ var _ = Describe("ObjectSyncer", func() {
 			}
 
 			Expect(stripSecrets(obj)).To(Equal(expectedObj))
+			Expect(obj.Data).To(HaveKey("awesome-secret-key"))
 		})
 	})
 })
