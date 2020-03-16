@@ -86,6 +86,23 @@ var _ = Describe("PodSpec Transformer", func() {
 								},
 							},
 						},
+						Affinity: &corev1.Affinity{
+							NodeAffinity: &corev1.NodeAffinity{
+								RequiredDuringSchedulingIgnoredDuringExecution: &corev1.NodeSelector{
+									NodeSelectorTerms: []corev1.NodeSelectorTerm{
+										{
+											MatchExpressions: []corev1.NodeSelectorRequirement{
+												{
+													Key:      "some-label-key",
+													Operator: corev1.NodeSelectorOpIn,
+													Values:   []string{"some-label-value"},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -233,5 +250,29 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 		Expect(deployment.Spec.Template.Spec.Volumes).To(HaveLen(1))
 		Expect(deployment.Spec.Template.Spec.Volumes[0].Name).To(Equal(newSpec.Volumes[0].Name))
+	})
+	It("override existing affinity with new one, instead of merging them", func() {
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		newAffinity := &corev1.Affinity{
+			NodeAffinity: &corev1.NodeAffinity{
+				PreferredDuringSchedulingIgnoredDuringExecution: []corev1.PreferredSchedulingTerm{
+					{
+						Weight: 42,
+						Preference: corev1.NodeSelectorTerm{
+							MatchExpressions: []corev1.NodeSelectorRequirement{
+								{
+									Key:      "some-label-key",
+									Operator: corev1.NodeSelectorOpExists,
+								},
+							},
+						},
+					},
+				},
+			},
+		}
+
+		newSpec.Affinity = newAffinity
+		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(deployment.Spec.Template.Spec.Affinity).To(Equal(newAffinity))
 	})
 })
