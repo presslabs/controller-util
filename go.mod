@@ -31,6 +31,4 @@ require (
 	sigs.k8s.io/controller-runtime v0.4.0
 )
 
-replace (
-    gopkg.in/fsnotify.v1 => gopkg.in/fsnotify.v1 v1.4.7
-)
+replace gopkg.in/fsnotify.v1 => gopkg.in/fsnotify.v1 v1.4.7

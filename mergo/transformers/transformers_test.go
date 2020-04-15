@@ -30,6 +30,14 @@ import (
 	"github.com/presslabs/controller-util/mergo/transformers"
 )
 
+var (
+	ten32   = int32(10)
+	five32  = int32(5)
+	ten64   = int64(10)
+	five64  = int64(5)
+	trueVar = true
+)
+
 var _ = Describe("PodSpec Transformer", func() {
 	var deployment *appsv1.Deployment
 
@@ -103,6 +111,9 @@ var _ = Describe("PodSpec Transformer", func() {
 								},
 							},
 						},
+						PriorityClassName:             "old-priority-class",
+						TerminationGracePeriodSeconds: &ten64,
+						Priority:                      &ten32,
 					},
 				},
 			},
@@ -274,5 +285,32 @@ var _ = Describe("PodSpec Transformer", func() {
 		newSpec.Affinity = newAffinity
 		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 		Expect(deployment.Spec.Template.Spec.Affinity).To(Equal(newAffinity))
+	})
+
+	It("updates the filds for string, *string, *int32, *int64, bool, *bool", func() {
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+
+		// type string
+		newSpec.PriorityClassName = "new-priority-class"
+		// type *int64
+		newSpec.TerminationGracePeriodSeconds = &five64
+		// type *int32
+		newSpec.Priority = &five32
+		// type *string
+		rcn := "new-runtime-class"
+		newSpec.RuntimeClassName = &rcn
+		// type bool
+		newSpec.HostIPC = true
+		// type *bool
+		newSpec.ShareProcessNamespace = &trueVar
+
+		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+
+		Expect(deployment.Spec.Template.Spec.PriorityClassName).To(Equal(newSpec.PriorityClassName))
+		Expect(deployment.Spec.Template.Spec.TerminationGracePeriodSeconds).To(Equal(&five64))
+		Expect(deployment.Spec.Template.Spec.Priority).To(Equal(&five32))
+		Expect(deployment.Spec.Template.Spec.RuntimeClassName).To(Equal(newSpec.RuntimeClassName))
+		Expect(deployment.Spec.Template.Spec.HostIPC).To(Equal(newSpec.HostIPC))
+		Expect(deployment.Spec.Template.Spec.ShareProcessNamespace).To(Equal(newSpec.ShareProcessNamespace))
 	})
 })
