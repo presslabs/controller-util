@@ -49,15 +49,20 @@ func init() {
 		reflect.TypeOf(new(string)):                     overwrite,
 		reflect.TypeOf(new(int32)):                      overwrite,
 		reflect.TypeOf(new(int64)):                      overwrite,
-		reflect.TypeOf(new(bool)):                       overwrite,
-		reflect.TypeOf(true):                            overwrite,
 	}
 }
 
 // overwrite just overrites the dst value with the source
 // nolint: unparam
 func overwrite(dst, src reflect.Value) error {
-	dst.Set(src)
+	if !src.IsZero() {
+		if dst.CanSet() {
+			dst.Set(src)
+		} else {
+			dst = src
+		}
+	}
+
 	return nil
 }
 

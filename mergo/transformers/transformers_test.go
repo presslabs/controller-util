@@ -25,6 +25,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/presslabs/controller-util/mergo/transformers"
@@ -43,6 +44,8 @@ var _ = Describe("PodSpec Transformer", func() {
 
 	BeforeEach(func() {
 		r := rand.Int31()
+		runtimeClass := "old-runtime-class-name"
+		sharedPN := false
 		name := fmt.Sprintf("depl-%d", r)
 		deployment = &appsv1.Deployment{
 			ObjectMeta: metav1.ObjectMeta{
@@ -76,6 +79,11 @@ var _ = Describe("PodSpec Transformer", func() {
 										Name:          "prometheus",
 										ContainerPort: 9125,
 										Protocol:      corev1.ProtocolTCP,
+									},
+								},
+								Resources: corev1.ResourceRequirements{
+									Requests: corev1.ResourceList{
+										corev1.ResourceCPU: resource.MustParse("100m"),
 									},
 								},
 							},
@@ -114,6 +122,9 @@ var _ = Describe("PodSpec Transformer", func() {
 						PriorityClassName:             "old-priority-class",
 						TerminationGracePeriodSeconds: &ten64,
 						Priority:                      &ten32,
+						RuntimeClassName:              &runtimeClass,
+						HostIPC:                       false,
+						ShareProcessNamespace:         &sharedPN,
 					},
 				},
 			},
@@ -287,7 +298,24 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Affinity).To(Equal(newAffinity))
 	})
 
+	It("should update unknown transformer type like Quantity", func() {
+		oldSpec := deployment.Spec.Template.Spec
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+
+		newCPU := resource.MustParse("3")
+		newSpec.Containers[1].Resources.Requests[corev1.ResourceCPU] = newCPU
+
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]).To(Equal(newCPU))
+
+		// don't update with empty value
+		newSpec.Containers[1].Resources.Requests = corev1.ResourceList{}
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]).To(Equal(newCPU))
+	})
+
 	It("updates the filds for string, *string, *int32, *int64, bool, *bool", func() {
+		oldSpec := deployment.Spec.Template.Spec
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
 
 		// type string
@@ -304,13 +332,22 @@ var _ = Describe("PodSpec Transformer", func() {
 		// type *bool
 		newSpec.ShareProcessNamespace = &trueVar
 
-		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 
-		Expect(deployment.Spec.Template.Spec.PriorityClassName).To(Equal(newSpec.PriorityClassName))
-		Expect(deployment.Spec.Template.Spec.TerminationGracePeriodSeconds).To(Equal(&five64))
-		Expect(deployment.Spec.Template.Spec.Priority).To(Equal(&five32))
-		Expect(deployment.Spec.Template.Spec.RuntimeClassName).To(Equal(newSpec.RuntimeClassName))
-		Expect(deployment.Spec.Template.Spec.HostIPC).To(Equal(newSpec.HostIPC))
-		Expect(deployment.Spec.Template.Spec.ShareProcessNamespace).To(Equal(newSpec.ShareProcessNamespace))
+		Expect(oldSpec.PriorityClassName).To(Equal(newSpec.PriorityClassName))
+		Expect(oldSpec.TerminationGracePeriodSeconds).To(Equal(&five64))
+		Expect(oldSpec.Priority).To(Equal(&five32))
+		Expect(oldSpec.RuntimeClassName).To(Equal(&rcn))
+		Expect(oldSpec.HostIPC).To(Equal(newSpec.HostIPC))
+		Expect(oldSpec.ShareProcessNamespace).To(Equal(newSpec.ShareProcessNamespace))
+	})
+
+	It("should not update string with empty value", func() {
+		oldSpec := deployment.Spec.Template.Spec
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		newSpec.PriorityClassName = ""
+
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(oldSpec.PriorityClassName).To(Equal("old-priority-class"))
 	})
 })
