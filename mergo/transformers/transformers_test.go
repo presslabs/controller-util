@@ -83,7 +83,12 @@ var _ = Describe("PodSpec Transformer", func() {
 								},
 								Resources: corev1.ResourceRequirements{
 									Requests: corev1.ResourceList{
-										corev1.ResourceCPU: resource.MustParse("100m"),
+										corev1.ResourceMemory: resource.MustParse("1Gi"),
+										corev1.ResourceCPU:    resource.MustParse("100m"),
+									},
+									Limits: corev1.ResourceList{
+										corev1.ResourceMemory: resource.MustParse("2Gi"),
+										corev1.ResourceCPU:    resource.MustParse("200m"),
 									},
 								},
 							},
@@ -296,6 +301,37 @@ var _ = Describe("PodSpec Transformer", func() {
 		newSpec.Affinity = newAffinity
 		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 		Expect(deployment.Spec.Template.Spec.Affinity).To(Equal(newAffinity))
+	})
+
+	It("should update existing Quantity in ResourceLists", func() {
+		oldSpec := deployment.Spec.Template.Spec
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+
+		newCPU := resource.MustParse("3")
+		newSpec.Containers[1].Resources.Requests[corev1.ResourceCPU] = newCPU
+
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]).To(Equal(newCPU))
+	})
+
+	It("should not update existing ResourceLists with an empty one", func() {
+		oldSpec := deployment.Spec.Template.Spec
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		cpu := oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]
+
+		// don't update with empty value
+		newSpec.Containers[1].Resources.Requests = corev1.ResourceList{}
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]).To(Equal(cpu))
+	})
+
+	It("should allow removing existing Quantity from ResourceList", func() {
+		oldSpec := deployment.Spec.Template.Spec
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+		delete(newSpec.Containers[1].Resources.Requests, corev1.ResourceCPU)
+
+		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(oldSpec.Containers[1].Resources.Requests).ShouldNot(HaveKey(corev1.ResourceCPU))
 	})
 
 	It("should update unknown transformer type like Quantity", func() {
