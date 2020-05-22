@@ -4,7 +4,9 @@ go 1.12
 
 require (
 	code.cloudfoundry.org/lager v2.0.0+incompatible
+	github.com/blendle/zapdriver v1.3.1
 	github.com/go-logr/logr v0.1.0
+	github.com/go-logr/zapr v0.1.0
 	github.com/go-test/deep v1.0.6
 	github.com/golang/groupcache v0.0.0-20191027212112-611e8accdfc9 // indirect
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
