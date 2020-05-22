@@ -17,7 +17,12 @@ limitations under the License.
 package log
 
 import (
+	"io"
+
+	"github.com/blendle/zapdriver"
 	"github.com/go-logr/logr"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 	zaplog "sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
@@ -52,4 +57,25 @@ var (
 
 func init() { // nolint: gochecknoinits
 	KBLog = Log.WithName("kubebuilder")
+}
+
+// RawStackdriveZapLoggerTo returns a new zap.Logger configured with KubeAwareEncoder and StackDriveEncoder
+func RawStackdriveZapLoggerTo(destWriter io.Writer, development bool, opts ...zap.Option) *zap.Logger {
+	return zaplog.NewRaw(zaplog.UseDevMode(development), zaplog.WriteTo(destWriter), withStackDriveEncoder(), zaplog.RawZapOpts(opts...))
+}
+
+func withStackDriveEncoder() zaplog.Opts {
+	return func(o *zaplog.Options) {
+		var enc zapcore.Encoder
+
+		if o.Development {
+			encCfg := zapdriver.NewDevelopmentEncoderConfig()
+			enc = zapcore.NewConsoleEncoder(encCfg)
+		} else {
+			encCfg := zapdriver.NewProductionEncoderConfig()
+			enc = zapcore.NewJSONEncoder(encCfg)
+		}
+
+		o.Encoder = enc
+	}
 }
