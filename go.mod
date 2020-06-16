@@ -13,6 +13,7 @@ require (
 	github.com/imdario/mergo v0.3.8
 	github.com/onsi/ginkgo v1.13.0
 	github.com/onsi/gomega v1.10.1
+	github.com/prometheus/client_golang v1.1.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/net v0.0.0-20200520004742-59133d7f0dd7
 	golang.org/x/oauth2 v0.0.0-20191122200657-5d9234df094c // indirect
@@ -20,7 +21,7 @@ require (
 	golang.org/x/time v0.0.0-20191024005414-555d28b269f0 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
 
-	// kubernetes-1.16.0
+	// kubernetes-1.18
 	k8s.io/api v0.18.3
 	k8s.io/apimachinery v0.18.3
 	k8s.io/client-go v0.18.3
