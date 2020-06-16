@@ -85,6 +85,9 @@ var _ = Describe("PodSpec Transformer", func() {
 									Requests: corev1.ResourceList{
 										corev1.ResourceCPU: resource.MustParse("100m"),
 									},
+									Limits: corev1.ResourceList{
+										corev1.ResourceCPU: resource.MustParse("300m"),
+									},
 								},
 							},
 						},
@@ -313,11 +316,16 @@ var _ = Describe("PodSpec Transformer", func() {
 
 		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 		Expect(oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]).To(Equal(newCPU))
+	})
 
-		// don't update with empty value
-		newSpec.Containers[1].Resources.Requests = corev1.ResourceList{}
+	It("should remove resources if not provided", func() {
+		oldSpec := deployment.Spec.Template.Spec
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+
+		// remove limits
+		newSpec.Containers[1].Resources.Limits = corev1.ResourceList{}
 		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
-		Expect(oldSpec.Containers[1].Resources.Requests[corev1.ResourceCPU]).To(Equal(newCPU))
+		Expect(oldSpec.Containers[1].Resources.Limits).ToNot(HaveKey(corev1.ResourceCPU))
 	})
 
 	It("updates the filds for string, *string, *int32, *int64, bool, *bool", func() {

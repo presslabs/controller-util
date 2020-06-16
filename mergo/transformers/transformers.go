@@ -50,6 +50,7 @@ func init() { // nolint: gochecknoinits
 		reflect.TypeOf(new(string)):                     overwrite,
 		reflect.TypeOf(new(int32)):                      overwrite,
 		reflect.TypeOf(new(int64)):                      overwrite,
+		reflect.TypeOf(corev1.ResourceList{}):           overwrite,
 	}
 }
 
