@@ -21,13 +21,13 @@ import (
 )
 
 // GetObject returns the ObjectSyncer subject
-// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead
+// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead.
 func (s *ObjectSyncer) GetObject() interface{} {
 	return s.Object()
 }
 
 // GetOwner returns the ObjectSyncer owner
-// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead
+// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead.
 func (s *ObjectSyncer) GetOwner() runtime.Object {
 	return s.ObjectOwner()
 }

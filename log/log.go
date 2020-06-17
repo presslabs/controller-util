@@ -46,7 +46,7 @@ var (
 	ZapLoggerTo = zaplog.LoggerTo
 
 	// RawZapLoggerTo returns a new zap.Logger configured with KubeAwareEncoder
-	// which logs to a given destination
+	// which logs to a given destination.
 	RawZapLoggerTo = zaplog.RawLoggerTo
 )
 

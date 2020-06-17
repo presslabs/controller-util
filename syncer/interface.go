@@ -23,7 +23,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// SyncResult is a result of an Sync call
+// SyncResult is a result of an Sync call.
 type SyncResult struct {
 	Operation    controllerutil.OperationResult
 	EventType    string
@@ -31,7 +31,7 @@ type SyncResult struct {
 	EventMessage string
 }
 
-// SetEventData sets event data on an SyncResult
+// SetEventData sets event data on an SyncResult.
 func (r *SyncResult) SetEventData(eventType, reason, message string) {
 	r.EventType = eventType
 	r.EventReason = reason
@@ -40,22 +40,22 @@ func (r *SyncResult) SetEventData(eventType, reason, message string) {
 
 // Interface represents a syncer. A syncer persists an object
 // (known as subject), into a store (kubernetes apiserver or generic stores)
-// and records kubernetes events
+// and records kubernetes events.
 type Interface interface {
-	// Object returns the object for which sync applies
+	// Object returns the object for which sync applies.
 	Object() interface{}
 
 	// GetObject returns the object for which sync applies
-	// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead
+	// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead.
 	GetObject() interface{}
 
-	// Owner returns the object owner or nil if object does not have one
+	// Owner returns the object owner or nil if object does not have one.
 	ObjectOwner() runtime.Object
 
-	// GetOwner returns the object owner or nil if object does not have one
-	// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead
+	// GetOwner returns the object owner or nil if object does not have one.
+	// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead.
 	GetOwner() runtime.Object
 
-	// Sync persists data into the external store
+	// Sync persists data into the external store.
 	Sync(context.Context) (SyncResult, error)
 }

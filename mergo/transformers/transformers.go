@@ -14,22 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// Package transformers provide mergo transformers for Kubernetes objects
+// Package transformers provide mergo transformers for Kubernetes objects.
 package transformers
 
 import (
-	"fmt"
+	"errors"
 	"reflect"
 
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 )
 
-// TransformerMap is a mergo.Transformers implementation
+// TransformerMap is a mergo.Transformers implementation.
 type TransformerMap map[reflect.Type]func(dst, src reflect.Value) error
 
-// PodSpec mergo transformers for corev1.PodSpec
+// PodSpec mergo transformers for corev1.PodSpec.
 var PodSpec TransformerMap
+
+var errCannotMerge = errors.New("cannot merge when key type differs")
 
 func init() { // nolint: gochecknoinits
 	PodSpec = TransformerMap{
@@ -51,7 +53,7 @@ func init() { // nolint: gochecknoinits
 	}
 }
 
-// overwrite just overrites the dst value with the source
+// overwrite just overrites the dst value with the source.
 // nolint: unparam
 func overwrite(dst, src reflect.Value) error {
 	if !src.IsZero() {
@@ -65,7 +67,7 @@ func overwrite(dst, src reflect.Value) error {
 	return nil
 }
 
-// Transformer implements mergo.Tansformers interface for TransformenrMap
+// Transformer implements mergo.Tansformers interface for TransformenrMap.
 func (s TransformerMap) Transformer(t reflect.Type) func(dst, src reflect.Value) error {
 	if fn, ok := s[t]; ok {
 		return fn
@@ -81,7 +83,7 @@ func (s *TransformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ..
 		dstKey := dst.Index(i).FieldByName(key)
 
 		if elemKey.Kind() != dstKey.Kind() {
-			return fmt.Errorf("cannot merge when key type differs")
+			return errCannotMerge
 		}
 
 		eq := eq(key, elem, dst.Index(i))
@@ -133,7 +135,7 @@ func indexByKey(key string, v reflect.Value, list reflect.Value) (int, bool) {
 // MergeListByKey merges two list by element key (eg. merge []corev1.Container
 // by name). If mergo.WithAppendSlice options is passed, the list is extended,
 // while elemnts with same name are merged. If not, the list is filtered to
-// elements in src
+// elements in src.
 func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config)) func(_, _ reflect.Value) error {
 	conf := &mergo.Config{}
 
@@ -146,10 +148,11 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 
 		for i := 0; i < src.Len(); i++ {
 			elem := src.Index(i)
-			err := s.mergeByKey(key, dst, elem, opts...)
-			if err != nil {
+
+			if err := s.mergeByKey(key, dst, elem, opts...); err != nil {
 				return err
 			}
+
 			j, found := indexByKey(key, elem, dst)
 			if found {
 				entries.Index(i).Set(dst.Index(j))
@@ -166,7 +169,7 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 	}
 }
 
-// NilOtherFields nils all fields not defined in src
+// NilOtherFields nils all fields not defined in src.
 func (s *TransformerMap) NilOtherFields(opts ...func(*mergo.Config)) func(_, _ reflect.Value) error {
 	return func(dst, src reflect.Value) error {
 		for i := 0; i < dst.NumField(); i++ {
@@ -181,6 +184,7 @@ func (s *TransformerMap) NilOtherFields(opts ...func(*mergo.Config)) func(_, _ r
 					dstValue.Set(srcValue)
 				} else {
 					opts = append(opts, mergo.WithTransformers(s))
+
 					return mergo.Merge(dstValue.Interface(), srcValue.Interface(), opts...)
 				}
 			}
@@ -190,7 +194,7 @@ func (s *TransformerMap) NilOtherFields(opts ...func(*mergo.Config)) func(_, _ r
 	}
 }
 
-// OverrideFields when merging override fields even if they are zero values (eg. nil or empty list)
+// OverrideFields when merging override fields even if they are zero values (eg. nil or empty list).
 func (s *TransformerMap) OverrideFields(fields ...string) func(_, _ reflect.Value) error {
 	return func(dst, src reflect.Value) error {
 		for _, field := range fields {

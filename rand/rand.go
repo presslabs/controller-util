@@ -41,14 +41,17 @@ const (
 func NewStringGenerator(characters string) func(int) (string, error) {
 	return func(length int) (string, error) {
 		result := ""
+
 		for {
 			if len(result) >= length {
 				return result, nil
 			}
+
 			num, err := rand.Int(rand.Reader, big.NewInt(int64(len(characters))))
 			if err != nil {
 				return "", err
 			}
+
 			n := num.Int64()
 			result += string(characters[n])
 		}
@@ -88,8 +91,7 @@ func assertAvailablePRNG() {
 	// Panic otherwise.
 	buf := make([]byte, 1)
 
-	_, err := io.ReadFull(rand.Reader, buf)
-	if err != nil {
+	if _, err := io.ReadFull(rand.Reader, buf); err != nil {
 		panic(fmt.Sprintf("crypto/rand is unavailable: Read() failed with %#v", err))
 	}
 }

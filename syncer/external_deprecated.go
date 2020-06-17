@@ -20,12 +20,12 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead
+// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead.
 func (s *externalSyncer) GetObject() interface{} {
 	return s.Object()
 }
 
-// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead
+// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead.
 func (s *externalSyncer) GetOwner() runtime.Object {
 	return s.ObjectOwner()
 }
