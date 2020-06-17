@@ -20,19 +20,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// AddFinalizer add a finalizer in ObjectMeta
+// AddFinalizer add a finalizer in ObjectMeta.
 func AddFinalizer(meta *metav1.ObjectMeta, finalizer string) {
 	if !HasFinalizer(meta, finalizer) {
 		meta.Finalizers = append(meta.Finalizers, finalizer)
 	}
 }
 
-// HasFinalizer returns true if ObjectMeta has the finalizer
+// HasFinalizer returns true if ObjectMeta has the finalizer.
 func HasFinalizer(meta *metav1.ObjectMeta, finalizer string) bool {
 	return containsString(meta.Finalizers, finalizer)
 }
 
-// RemoveFinalizer removes the finalizer from ObjectMeta
+// RemoveFinalizer removes the finalizer from ObjectMeta.
 func RemoveFinalizer(meta *metav1.ObjectMeta, finalizer string) {
 	meta.Finalizers = removeString(meta.Finalizers, finalizer)
 }

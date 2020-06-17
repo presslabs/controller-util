@@ -158,6 +158,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Containers[0].Name).To(Equal("helper"))
 		Expect(deployment.Spec.Template.Spec.Containers[0].Ports).To(HaveLen(2))
 	})
+
 	It("allows container rename", func() {
 		newSpec := corev1.PodSpec{
 			Containers: []corev1.Container{
@@ -185,6 +186,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Containers[0].Name).To(Equal("new-helper"))
 		Expect(deployment.Spec.Template.Spec.Containers[0].Ports).To(HaveLen(2))
 	})
+
 	It("allows container image update", func() {
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
 		newSpec.Containers[0].Image = "main-image-v2"
@@ -214,6 +216,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Containers[0].Env[0].Name).To(Equal("TEST-2"))
 		Expect(deployment.Spec.Template.Spec.Containers[0].Env[0].Value).To(Equal("me-2"))
 	})
+
 	It("merges container ports", func() {
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
 		newSpec.Containers[1].Ports = []corev1.ContainerPort{
@@ -228,6 +231,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Containers[1].Ports).To(HaveLen(1))
 		Expect(deployment.Spec.Template.Spec.Containers[1].Ports[0].ContainerPort).To(Equal(int32(9125)))
 	})
+
 	It("allows prepending volume", func() {
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
 		newSpec.Volumes = []corev1.Volume{
@@ -259,6 +263,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Volumes[1].EmptyDir).To(BeNil())
 		Expect(deployment.Spec.Template.Spec.Volumes[1].HostPath).ToNot(BeNil())
 	})
+
 	It("allows replacing volume list", func() {
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
 		newSpec.Volumes = []corev1.Volume{
@@ -273,6 +278,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(deployment.Spec.Template.Spec.Volumes).To(HaveLen(1))
 		Expect(deployment.Spec.Template.Spec.Volumes[0].Name).To(Equal(newSpec.Volumes[0].Name))
 	})
+
 	It("override existing affinity with new one, instead of merging them", func() {
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
 		newAffinity := &corev1.Affinity{

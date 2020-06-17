@@ -18,6 +18,7 @@ package syncer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/go-test/deep"
@@ -30,13 +31,30 @@ import (
 
 var (
 	errOwnerDeleted = fmt.Errorf("owner is deleted")
+	errNotObject    = errors.New("is not a metav1.Object")
 
 	// ErrIgnore when returned the syncer ignores it and returns nil
 	ErrIgnore = fmt.Errorf("ignored error")
 )
 
+type notObjectWrappedError struct {
+	Context string
+	Err     error
+}
+
+func (w *notObjectWrappedError) Error() string {
+	return fmt.Sprintf("%s %v", w.Context, w.Err)
+}
+
+func wrapNotObjectErr(obj string) *notObjectWrappedError {
+	return &notObjectWrappedError{
+		Context: obj,
+		Err:     errNotObject,
+	}
+}
+
 // ObjectSyncer is a syncer.Interface for syncing kubernetes.Objects only by
-// passing a SyncFn
+// passing a SyncFn.
 type ObjectSyncer struct {
 	Owner          runtime.Object
 	Obj            runtime.Object
@@ -47,7 +65,7 @@ type ObjectSyncer struct {
 	previousObject runtime.Object
 }
 
-// stripSecrets returns a copy for the secret without secret data in it
+// stripSecrets returns a copy for the secret without secret data in it.
 func stripSecrets(obj runtime.Object) runtime.Object {
 	// if obj is secret, don't print secret data
 	s, ok := obj.(*corev1.Secret)
@@ -62,37 +80,37 @@ func stripSecrets(obj runtime.Object) runtime.Object {
 	return obj
 }
 
-// Object returns the ObjectSyncer subject
+// Object returns the ObjectSyncer subject.
 func (s *ObjectSyncer) Object() interface{} {
 	return s.Obj
 }
 
-// ObjectOwner returns the ObjectSyncer owner
+// ObjectOwner returns the ObjectSyncer owner.
 func (s *ObjectSyncer) ObjectOwner() runtime.Object {
 	return s.Owner
 }
 
-// ObjectWithoutSecretData returns the ObjectSyncer subject without secret data
+// ObjectWithoutSecretData returns the ObjectSyncer subject without secret data.
 func (s *ObjectSyncer) ObjectWithoutSecretData() interface{} {
 	return stripSecrets(s.Obj)
 }
 
-// PreviousWithoutSecretData returns the ObjectSyncer previous subject without secret data
+// PreviousWithoutSecretData returns the ObjectSyncer previous subject without secret data.
 func (s *ObjectSyncer) PreviousWithoutSecretData() interface{} {
 	return stripSecrets(s.previousObject)
 }
 
-// ObjectType returns the type of the ObjectSyncer subject
+// ObjectType returns the type of the ObjectSyncer subject.
 func (s *ObjectSyncer) ObjectType() string {
 	return fmt.Sprintf("%T", s.Obj)
 }
 
-// OwnerType returns the type of the ObjectSyncer owner
+// OwnerType returns the type of the ObjectSyncer owner.
 func (s *ObjectSyncer) OwnerType() string {
 	return fmt.Sprintf("%T", s.Owner)
 }
 
-// Sync does the actual syncing and implements the syncer.Inteface Sync method
+// Sync does the actual syncing and implements the syncer.Inteface Sync method.
 func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	result := SyncResult{}
 
@@ -108,10 +126,10 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 
 	// don't pass to user error for owner deletion, just don't create the object
 	// nolint: gocritic
-	if err == errOwnerDeleted {
+	if errors.Is(err, errOwnerDeleted) {
 		log.Info(string(result.Operation), "key", key, "kind", s.ObjectType(), "error", err)
 		err = nil
-	} else if err == ErrIgnore {
+	} else if errors.Is(err, ErrIgnore) {
 		log.V(1).Info("syncer skipped", "key", key, "kind", s.ObjectType())
 		err = nil
 	} else if err != nil {
@@ -128,7 +146,7 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 }
 
 // Given an ObjectSyncer, returns a controllerutil.MutateFn which also sets the
-// owner reference if the subject has one
+// owner reference if the subject has one.
 func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 	return func() error {
 		s.previousObject = s.Obj.DeepCopyObject()
@@ -138,29 +156,30 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 			return err
 		}
 
-		if s.Owner != nil {
-			existingMeta, ok := s.Obj.(metav1.Object)
-			if !ok {
-				return fmt.Errorf("%s is not a metav1.Object", s.ObjectType())
-			}
+		if s.Owner == nil {
+			return nil
+		}
 
-			ownerMeta, ok := s.Owner.(metav1.Object)
-			if !ok {
-				return fmt.Errorf("%s is not a metav1.Object", s.OwnerType())
-			}
+		existingMeta, ok := s.Obj.(metav1.Object)
+		if !ok {
+			return wrapNotObjectErr(s.ObjectType())
+		}
 
-			// set owner reference only if owner resource is not being deleted, otherwise the owner
-			// reference will be reset in case of deleting with cascade=false.
-			if ownerMeta.GetDeletionTimestamp().IsZero() {
-				err := controllerutil.SetControllerReference(ownerMeta, existingMeta, s.Scheme)
-				if err != nil {
-					return err
-				}
-			} else if ctime := existingMeta.GetCreationTimestamp(); ctime.IsZero() {
-				// the owner is deleted, don't recreate the resource if does not exist, because gc
-				// will not delete it again because has no owner reference set
-				return errOwnerDeleted
+		ownerMeta, ok := s.Owner.(metav1.Object)
+		if !ok {
+			return wrapNotObjectErr(s.OwnerType())
+		}
+
+		// set owner reference only if owner resource is not being deleted, otherwise the owner
+		// reference will be reset in case of deleting with cascade=false.
+		if ownerMeta.GetDeletionTimestamp().IsZero() {
+			if err := controllerutil.SetControllerReference(ownerMeta, existingMeta, s.Scheme); err != nil {
+				return err
 			}
+		} else if ctime := existingMeta.GetCreationTimestamp(); ctime.IsZero() {
+			// the owner is deleted, don't recreate the resource if does not exist, because gc
+			// will not delete it again because has no owner reference set
+			return errOwnerDeleted
 		}
 
 		return nil
@@ -170,7 +189,7 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 // NewObjectSyncer creates a new kubernetes.Object syncer for a given object
 // with an owner and persists data using controller-runtime's CreateOrUpdate.
 // The name is used for logging and event emitting purposes and should be an
-// valid go identifier in upper camel case. (eg. MysqlStatefulSet)
+// valid go identifier in upper camel case. (eg. MysqlStatefulSet).
 func NewObjectSyncer(name string, owner, obj runtime.Object, c client.Client, scheme *runtime.Scheme,
 	syncFn controllerutil.MutateFn) Interface {
 	return &ObjectSyncer{

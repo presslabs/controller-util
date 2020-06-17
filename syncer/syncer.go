@@ -41,7 +41,7 @@ func getKey(obj runtime.Object) (types.NamespacedName, error) {
 
 	objMeta, ok := obj.(metav1.Object)
 	if !ok {
-		return key, fmt.Errorf("%T is not a metav1.Object", obj)
+		return key, wrapNotObjectErr(fmt.Sprintf("%T", obj))
 	}
 
 	key.Name = objMeta.GetName()
@@ -60,7 +60,7 @@ func basicEventReason(objKindName string, err error) string {
 
 // Sync mutates the subject of the syncer interface using controller-runtime
 // CreateOrUpdate method, when obj is not nil. It takes care of setting owner
-// references and recording kubernetes events where appropriate
+// references and recording kubernetes events where appropriate.
 func Sync(ctx context.Context, syncer Interface, recorder record.EventRecorder) error {
 	result, err := syncer.Sync(ctx)
 	owner := syncer.GetOwner()
@@ -74,10 +74,11 @@ func Sync(ctx context.Context, syncer Interface, recorder record.EventRecorder) 
 	return err
 }
 
-// WithoutOwner partially implements implements the syncer interface for the case the subject has no owner
+// WithoutOwner partially implements implements the syncer interface for the
+// case the subject has no owner.
 type WithoutOwner struct{}
 
-// GetOwner implementation of syncer interface for the case the subject has no owner
+// GetOwner implementation of syncer interface for the case the subject has no owner.
 func (*WithoutOwner) GetOwner() runtime.Object {
 	return nil
 }

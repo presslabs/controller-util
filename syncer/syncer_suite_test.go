@@ -26,6 +26,7 @@ import (
 	"k8s.io/client-go/rest"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
+	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 )
 
 var t *envtest.Environment
@@ -34,7 +35,7 @@ var c client.Client
 
 func TestV1alpha1(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "Syncer Suite", []Reporter{envtest.NewlineReporter{}})
+	RunSpecsWithDefaultAndCustomReporters(t, "Syncer Suite", []Reporter{printer.NewlineReporter{}})
 }
 
 var _ = BeforeSuite(func() {
