@@ -59,12 +59,12 @@ func init() { // nolint: gochecknoinits
 	KBLog = Log.WithName("kubebuilder")
 }
 
-// RawStackdriveZapLoggerTo returns a new zap.Logger configured with KubeAwareEncoder and StackDriveEncoder
-func RawStackdriveZapLoggerTo(destWriter io.Writer, development bool, opts ...zap.Option) *zap.Logger {
-	return zaplog.NewRaw(zaplog.UseDevMode(development), zaplog.WriteTo(destWriter), withStackDriveEncoder(), zaplog.RawZapOpts(opts...))
+// RawStackdriverZapLoggerTo returns a new zap.Logger configured with KubeAwareEncoder and StackDriverEncoder.
+func RawStackdriverZapLoggerTo(destWriter io.Writer, development bool, opts ...zap.Option) *zap.Logger {
+	return zaplog.NewRaw(zaplog.UseDevMode(development), zaplog.WriteTo(destWriter), withStackDriverEncoder(), zaplog.RawZapOpts(opts...))
 }
 
-func withStackDriveEncoder() zaplog.Opts {
+func withStackDriverEncoder() zaplog.Opts {
 	return func(o *zaplog.Options) {
 		var enc zapcore.Encoder
 
