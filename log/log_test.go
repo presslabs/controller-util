@@ -53,7 +53,7 @@ var _ = Describe("Logging tests", func() {
 		BeforeEach(func() {
 			var logOut []byte
 			logOutBuffer = bytes.NewBuffer(logOut)
-			zapLogger = RawStackdriveZapLoggerTo(logOutBuffer, false)
+			zapLogger = RawStackdriverZapLoggerTo(logOutBuffer, false)
 			logger = zapr.NewLogger(zapLogger)
 		})
 
@@ -107,7 +107,7 @@ var _ = Describe("Logging tests", func() {
 		BeforeEach(func() {
 			var logOut []byte
 			logOutBuffer = bytes.NewBuffer(logOut)
-			zapLogger = RawStackdriveZapLoggerTo(logOutBuffer, true)
+			zapLogger = RawStackdriverZapLoggerTo(logOutBuffer, true)
 			logger = zapr.NewLogger(zapLogger)
 
 		})
