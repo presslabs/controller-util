@@ -33,7 +33,7 @@ var (
 	errOwnerDeleted = fmt.Errorf("owner is deleted")
 	errNotObject    = errors.New("is not a metav1.Object")
 
-	// ErrIgnore when returned the syncer ignores it and returns nil
+	// ErrIgnore when returned the syncer ignores it and returns nil.
 	ErrIgnore = fmt.Errorf("ignored error")
 )
 

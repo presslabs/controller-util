@@ -15,6 +15,7 @@ require (
 	github.com/prometheus/client_golang v1.1.0 // indirect
 	go.uber.org/zap v1.15.0
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381
+	golang.org/x/sys v0.0.0-20200831180312-196b9ba8737a // indirect
 
 	// kubernetes-1.18
 	k8s.io/api v0.19.0

@@ -90,6 +90,7 @@ func (s *TransformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ..
 		eq := eq(key, elem, dst.Index(i))
 		if eq {
 			opts = append(opts, mergo.WithTransformers(s))
+
 			return mergo.Merge(dst.Index(i).Addr().Interface(), elem.Interface(), opts...)
 		}
 	}
@@ -109,6 +110,7 @@ func eq(key string, a, b reflect.Value) bool {
 
 	eq := false
 
+	// nolint: exhaustive
 	switch aKey.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		eq = aKey.Int() == bKey.Int()
@@ -118,6 +120,14 @@ func eq(key string, a, b reflect.Value) bool {
 		eq = aKey.String() == bKey.String()
 	case reflect.Float32, reflect.Float64:
 		eq = aKey.Float() == bKey.Float()
+	case reflect.Bool:
+		eq = aKey.Bool() == bKey.Bool()
+	case reflect.Complex128, reflect.Complex64:
+		eq = aKey.Complex() == bKey.Complex()
+	case reflect.Interface:
+		eq = aKey.Interface() == bKey.Interface()
+	case reflect.Map:
+		eq = aKey.MapRange() == bKey.MapRange()
 	}
 
 	return eq
