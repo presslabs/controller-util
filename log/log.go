@@ -38,21 +38,6 @@ var (
 
 	// SetLogger sets a concrete logging implementation for all deferred Loggers.
 	SetLogger = log.SetLogger
-
-	// ZapLogger is a Logger implementation.
-	// If development is true, a Zap development config will be used
-	// (stacktraces on warnings, no sampling), otherwise a Zap production
-	// config will be used (stacktraces on errors, sampling).
-	ZapLogger = zaplog.Logger
-
-	// ZapLoggerTo returns a new Logger implementation using Zap which logs
-	// to the given destination, instead of stderr.  It otherwise behaves like
-	// ZapLogger.
-	ZapLoggerTo = zaplog.LoggerTo
-
-	// RawZapLoggerTo returns a new zap.Logger configured with KubeAwareEncoder
-	// which logs to a given destination.
-	RawZapLoggerTo = zaplog.RawLoggerTo
 )
 
 func init() { // nolint: gochecknoinits
