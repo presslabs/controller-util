@@ -22,21 +22,21 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/presslabs/controller-util/syncer"
 )
 
 var (
 	recorder record.EventRecorder
-	owner    runtime.Object
+	owner    client.Object
 	log      = logf.Log.WithName("controllerutil-examples")
 )
 
-func NewDeploymentSyncer(owner runtime.Object) syncer.Interface {
+func NewDeploymentSyncer(owner client.Object) syncer.Interface {
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "example",

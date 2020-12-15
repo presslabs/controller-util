@@ -56,8 +56,8 @@ func wrapNotObjectErr(obj string) *notObjectWrappedError {
 // ObjectSyncer is a syncer.Interface for syncing kubernetes.Objects only by
 // passing a SyncFn.
 type ObjectSyncer struct {
-	Owner          runtime.Object
-	Obj            runtime.Object
+	Owner          client.Object
+	Obj            client.Object
 	SyncFn         controllerutil.MutateFn
 	Name           string
 	Client         client.Client
@@ -190,7 +190,7 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 // with an owner and persists data using controller-runtime's CreateOrUpdate.
 // The name is used for logging and event emitting purposes and should be an
 // valid go identifier in upper camel case. (eg. MysqlStatefulSet).
-func NewObjectSyncer(name string, owner, obj runtime.Object, c client.Client, scheme *runtime.Scheme,
+func NewObjectSyncer(name string, owner, obj client.Object, c client.Client, scheme *runtime.Scheme,
 	syncFn controllerutil.MutateFn) Interface {
 	return &ObjectSyncer{
 		Owner:  owner,
