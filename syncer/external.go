@@ -46,6 +46,7 @@ func (s *externalSyncer) ObjectOwner() runtime.Object {
 
 func (s *externalSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	var err error
+
 	log := logf.FromContext(ctx, "syncer", s.name)
 
 	result := SyncResult{}

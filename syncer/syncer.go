@@ -38,11 +38,11 @@ var (
 	ErrOwnerDeleted = fmt.Errorf("owner is deleted")
 
 	// ErrIgnore is returned for ignored errors.
-	// Ignored errors are treated by the syncer as successfull syncs.
+	// Ignored errors are treated by the syncer as successful syncs.
 	ErrIgnore = fmt.Errorf("ignored error")
 )
 
-// IgnoredError marks the error as being ignored
+// IgnoredError wraps and marks errors as being ignored.
 func IgnoredError(err error) error {
 	return fmt.Errorf("%s: %w", err, ErrIgnore)
 }
@@ -55,7 +55,7 @@ func basicEventReason(objKindName string, err error) string {
 	return fmt.Sprintf("%sSyncSuccessfull", strcase.ToCamel(objKindName))
 }
 
-// Redacts sensitive data from runtime.Object making them suitable for logging
+// Redacts sensitive data from runtime.Object making them suitable for logging.
 func redact(obj runtime.Object) runtime.Object {
 	switch exposed := obj.(type) {
 	case *corev1.Secret:
@@ -63,10 +63,12 @@ func redact(obj runtime.Object) runtime.Object {
 		redacted.Data = nil
 		redacted.StringData = nil
 		exposed.ObjectMeta.DeepCopyInto(&redacted.ObjectMeta)
+
 		return redacted
 	case *corev1.ConfigMap:
 		redacted := exposed.DeepCopy()
 		redacted.Data = nil
+
 		return redacted
 	}
 

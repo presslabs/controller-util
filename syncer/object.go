@@ -40,15 +40,17 @@ type ObjectSyncer struct {
 	previousObject runtime.Object
 }
 
-// objectType returns the type of a runtime.Object
+// objectType returns the type of a runtime.Object.
 func (s *ObjectSyncer) objectType(obj runtime.Object) string {
 	if obj != nil {
 		gvk, err := apiutil.GVKForObject(obj, s.Client.Scheme())
 		if err != nil {
 			return fmt.Sprintf("%T", obj)
 		}
+
 		return gvk.String()
 	}
+
 	return "nil"
 }
 
