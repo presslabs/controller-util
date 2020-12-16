@@ -96,7 +96,7 @@ var _ = Describe("ObjectSyncer", func() {
 				},
 			}
 
-			syn := NewObjectSyncer("xxx", nil, obj, c, nil, func() error {
+			syn := NewObjectSyncer("xxx", nil, obj, c, func() error {
 				return ErrIgnore
 			})
 

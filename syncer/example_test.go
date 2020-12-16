@@ -22,7 +22,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -45,7 +44,7 @@ func NewDeploymentSyncer(owner client.Object) syncer.Interface {
 	}
 
 	// c is client.Client
-	return syncer.NewObjectSyncer("ExampleDeployment", owner, deploy, c, scheme.Scheme, func() error {
+	return syncer.NewObjectSyncer("ExampleDeployment", owner, deploy, c, func() error {
 		// Deployment selector is immutable so we set this value only if
 		// a new object is going to be created
 		if deploy.ObjectMeta.CreationTimestamp.IsZero() {

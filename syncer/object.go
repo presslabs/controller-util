@@ -23,7 +23,6 @@ import (
 
 	"github.com/go-test/deep"
 	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -37,22 +36,6 @@ var (
 	ErrIgnore = fmt.Errorf("ignored error")
 )
 
-type notObjectWrappedError struct {
-	Context string
-	Err     error
-}
-
-func (w *notObjectWrappedError) Error() string {
-	return fmt.Sprintf("%s %v", w.Context, w.Err)
-}
-
-func wrapNotObjectErr(obj string) *notObjectWrappedError {
-	return &notObjectWrappedError{
-		Context: obj,
-		Err:     errNotObject,
-	}
-}
-
 // ObjectSyncer is a syncer.Interface for syncing kubernetes.Objects only by
 // passing a SyncFn.
 type ObjectSyncer struct {
@@ -61,7 +44,6 @@ type ObjectSyncer struct {
 	SyncFn         controllerutil.MutateFn
 	Name           string
 	Client         client.Client
-	Scheme         *runtime.Scheme
 	previousObject runtime.Object
 }
 
@@ -112,12 +94,10 @@ func (s *ObjectSyncer) OwnerType() string {
 
 // Sync does the actual syncing and implements the syncer.Inteface Sync method.
 func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
-	result := SyncResult{}
+	var err error
 
-	key, err := getKey(s.Obj)
-	if err != nil {
-		return result, err
-	}
+	result := SyncResult{}
+	key := client.ObjectKeyFromObject(s.Obj)
 
 	result.Operation, err = controllerutil.CreateOrUpdate(ctx, s.Client, s.Obj, s.mutateFn())
 
@@ -160,23 +140,13 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 			return nil
 		}
 
-		existingMeta, ok := s.Obj.(metav1.Object)
-		if !ok {
-			return wrapNotObjectErr(s.ObjectType())
-		}
-
-		ownerMeta, ok := s.Owner.(metav1.Object)
-		if !ok {
-			return wrapNotObjectErr(s.OwnerType())
-		}
-
 		// set owner reference only if owner resource is not being deleted, otherwise the owner
 		// reference will be reset in case of deleting with cascade=false.
-		if ownerMeta.GetDeletionTimestamp().IsZero() {
-			if err := controllerutil.SetControllerReference(ownerMeta, existingMeta, s.Scheme); err != nil {
+		if s.Owner.GetDeletionTimestamp().IsZero() {
+			if err := controllerutil.SetControllerReference(s.Owner, s.Obj, s.Client.Scheme()); err != nil {
 				return err
 			}
-		} else if ctime := existingMeta.GetCreationTimestamp(); ctime.IsZero() {
+		} else if ctime := s.Obj.GetCreationTimestamp(); ctime.IsZero() {
 			// the owner is deleted, don't recreate the resource if does not exist, because gc
 			// will not delete it again because has no owner reference set
 			return errOwnerDeleted
@@ -190,14 +160,12 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 // with an owner and persists data using controller-runtime's CreateOrUpdate.
 // The name is used for logging and event emitting purposes and should be an
 // valid go identifier in upper camel case. (eg. MysqlStatefulSet).
-func NewObjectSyncer(name string, owner, obj client.Object, c client.Client, scheme *runtime.Scheme,
-	syncFn controllerutil.MutateFn) Interface {
+func NewObjectSyncer(name string, owner, obj client.Object, c client.Client, syncFn controllerutil.MutateFn) Interface {
 	return &ObjectSyncer{
 		Owner:  owner,
 		Obj:    obj,
 		SyncFn: syncFn,
 		Name:   name,
 		Client: c,
-		Scheme: scheme,
 	}
 }

@@ -21,10 +21,8 @@ import (
 	"fmt"
 
 	"github.com/iancoleman/strcase"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
@@ -35,20 +33,6 @@ const (
 	eventNormal  = "Normal"
 	eventWarning = "Warning"
 )
-
-func getKey(obj runtime.Object) (types.NamespacedName, error) {
-	key := types.NamespacedName{}
-
-	objMeta, ok := obj.(metav1.Object)
-	if !ok {
-		return key, wrapNotObjectErr(fmt.Sprintf("%T", obj))
-	}
-
-	key.Name = objMeta.GetName()
-	key.Namespace = objMeta.GetNamespace()
-
-	return key, nil
-}
 
 func basicEventReason(objKindName string, err error) string {
 	if err != nil {
@@ -79,6 +63,6 @@ func Sync(ctx context.Context, syncer Interface, recorder record.EventRecorder) 
 type WithoutOwner struct{}
 
 // GetOwner implementation of syncer interface for the case the subject has no owner.
-func (*WithoutOwner) GetOwner() runtime.Object {
+func (*WithoutOwner) GetOwner() client.Object {
 	return nil
 }
