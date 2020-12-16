@@ -85,7 +85,7 @@ var _ = Describe("ObjectSyncer", func() {
 			var event string
 			Expect(recorder.Events).To(Receive(&event))
 			Expect(event).To(ContainSubstring("ExampleDeploymentSyncSuccessfull"))
-			Expect(event).To(ContainSubstring("*v1.Deployment default/example created successfully"))
+			Expect(event).To(ContainSubstring("apps/v1, Kind=Deployment default/example created successfully"))
 		})
 
 		It("should ignore ErrIgnore", func() {

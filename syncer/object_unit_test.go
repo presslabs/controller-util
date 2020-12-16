@@ -41,7 +41,7 @@ var _ = Describe("ObjectSyncer", func() {
 				},
 			}
 
-			Expect(stripSecrets(obj)).To(Equal(obj))
+			Expect(redact(obj)).To(Equal(obj))
 		})
 
 		It("returns the object without secret data when the object is a secret", func() {
@@ -65,7 +65,7 @@ var _ = Describe("ObjectSyncer", func() {
 				},
 			}
 
-			Expect(stripSecrets(obj)).To(Equal(expectedObj))
+			Expect(redact(obj)).To(Equal(expectedObj))
 			Expect(obj.Data).To(HaveKey("awesome-secret-key"))
 		})
 	})

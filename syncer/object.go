@@ -22,18 +22,11 @@ import (
 	"fmt"
 
 	"github.com/go-test/deep"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-)
-
-var (
-	errOwnerDeleted = fmt.Errorf("owner is deleted")
-	errNotObject    = errors.New("is not a metav1.Object")
-
-	// ErrIgnore when returned the syncer ignores it and returns nil.
-	ErrIgnore = fmt.Errorf("ignored error")
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 // ObjectSyncer is a syncer.Interface for syncing kubernetes.Objects only by
@@ -47,19 +40,16 @@ type ObjectSyncer struct {
 	previousObject runtime.Object
 }
 
-// stripSecrets returns a copy for the secret without secret data in it.
-func stripSecrets(obj runtime.Object) runtime.Object {
-	// if obj is secret, don't print secret data
-	s, ok := obj.(*corev1.Secret)
-	if ok {
-		cObj := s.DeepCopyObject().(*corev1.Secret)
-		cObj.Data = nil
-		cObj.StringData = nil
-
-		return cObj
+// objectType returns the type of a runtime.Object
+func (s *ObjectSyncer) objectType(obj runtime.Object) string {
+	if obj != nil {
+		gvk, err := apiutil.GVKForObject(obj, s.Client.Scheme())
+		if err != nil {
+			return fmt.Sprintf("%T", obj)
+		}
+		return gvk.String()
 	}
-
-	return obj
+	return "nil"
 }
 
 // Object returns the ObjectSyncer subject.
@@ -72,54 +62,35 @@ func (s *ObjectSyncer) ObjectOwner() runtime.Object {
 	return s.Owner
 }
 
-// ObjectWithoutSecretData returns the ObjectSyncer subject without secret data.
-func (s *ObjectSyncer) ObjectWithoutSecretData() interface{} {
-	return stripSecrets(s.Obj)
-}
-
-// PreviousWithoutSecretData returns the ObjectSyncer previous subject without secret data.
-func (s *ObjectSyncer) PreviousWithoutSecretData() interface{} {
-	return stripSecrets(s.previousObject)
-}
-
-// ObjectType returns the type of the ObjectSyncer subject.
-func (s *ObjectSyncer) ObjectType() string {
-	return fmt.Sprintf("%T", s.Obj)
-}
-
-// OwnerType returns the type of the ObjectSyncer owner.
-func (s *ObjectSyncer) OwnerType() string {
-	return fmt.Sprintf("%T", s.Owner)
-}
-
 // Sync does the actual syncing and implements the syncer.Inteface Sync method.
 func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	var err error
 
 	result := SyncResult{}
+	log := logf.FromContext(ctx, "syncer", s.Name)
 	key := client.ObjectKeyFromObject(s.Obj)
 
 	result.Operation, err = controllerutil.CreateOrUpdate(ctx, s.Client, s.Obj, s.mutateFn())
 
 	// check deep diff
-	diff := deep.Equal(s.PreviousWithoutSecretData(), s.ObjectWithoutSecretData())
+	diff := deep.Equal(redact(s.previousObject), redact(s.Obj))
 
 	// don't pass to user error for owner deletion, just don't create the object
 	// nolint: gocritic
-	if errors.Is(err, errOwnerDeleted) {
-		log.Info(string(result.Operation), "key", key, "kind", s.ObjectType(), "error", err)
+	if errors.Is(err, ErrOwnerDeleted) {
+		log.Info(string(result.Operation), "key", key, "kind", s.objectType(s.Obj), "error", err)
 		err = nil
 	} else if errors.Is(err, ErrIgnore) {
-		log.V(1).Info("syncer skipped", "key", key, "kind", s.ObjectType())
+		log.V(1).Info("syncer skipped", "key", key, "kind", s.objectType(s.Obj), "error", err)
 		err = nil
 	} else if err != nil {
 		result.SetEventData(eventWarning, basicEventReason(s.Name, err),
-			fmt.Sprintf("%s %s failed syncing: %s", s.ObjectType(), key, err))
-		log.Error(err, string(result.Operation), "key", key, "kind", s.ObjectType(), "diff", diff)
+			fmt.Sprintf("%s %s failed syncing: %s", s.objectType(s.Obj), key, err))
+		log.Error(err, string(result.Operation), "key", key, "kind", s.objectType(s.Obj), "diff", diff)
 	} else {
 		result.SetEventData(eventNormal, basicEventReason(s.Name, err),
-			fmt.Sprintf("%s %s %s successfully", s.ObjectType(), key, result.Operation))
-		log.V(1).Info(string(result.Operation), "key", key, "kind", s.ObjectType(), "diff", diff)
+			fmt.Sprintf("%s %s %s successfully", s.objectType(s.Obj), key, result.Operation))
+		log.V(1).Info(string(result.Operation), "key", key, "kind", s.objectType(s.Obj), "diff", diff)
 	}
 
 	return result, err
@@ -149,7 +120,7 @@ func (s *ObjectSyncer) mutateFn() controllerutil.MutateFn {
 		} else if ctime := s.Obj.GetCreationTimestamp(); ctime.IsZero() {
 			// the owner is deleted, don't recreate the resource if does not exist, because gc
 			// will not delete it again because has no owner reference set
-			return errOwnerDeleted
+			return ErrOwnerDeleted
 		}
 
 		return nil

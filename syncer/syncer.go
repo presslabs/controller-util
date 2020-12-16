@@ -21,18 +21,31 @@ import (
 	"fmt"
 
 	"github.com/iancoleman/strcase"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
-
-var log = logf.Log.WithName("syncer")
 
 const (
 	eventNormal  = "Normal"
 	eventWarning = "Warning"
 )
+
+var (
+	// ErrOwnerDeleted is returned when the object owner is marked for deletion.
+	ErrOwnerDeleted = fmt.Errorf("owner is deleted")
+
+	// ErrIgnore is returned for ignored errors.
+	// Ignored errors are treated by the syncer as successfull syncs.
+	ErrIgnore = fmt.Errorf("ignored error")
+)
+
+// IgnoredError marks the error as being ignored
+func IgnoredError(err error) error {
+	return fmt.Errorf("%s: %w", err, ErrIgnore)
+}
 
 func basicEventReason(objKindName string, err error) string {
 	if err != nil {
@@ -40,6 +53,24 @@ func basicEventReason(objKindName string, err error) string {
 	}
 
 	return fmt.Sprintf("%sSyncSuccessfull", strcase.ToCamel(objKindName))
+}
+
+// Redacts sensitive data from runtime.Object making them suitable for logging
+func redact(obj runtime.Object) runtime.Object {
+	switch exposed := obj.(type) {
+	case *corev1.Secret:
+		redacted := exposed.DeepCopy()
+		redacted.Data = nil
+		redacted.StringData = nil
+		exposed.ObjectMeta.DeepCopyInto(&redacted.ObjectMeta)
+		return redacted
+	case *corev1.ConfigMap:
+		redacted := exposed.DeepCopy()
+		redacted.Data = nil
+		return redacted
+	}
+
+	return obj
 }
 
 // Sync mutates the subject of the syncer interface using controller-runtime
