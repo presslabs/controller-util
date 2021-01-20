@@ -122,6 +122,13 @@ var _ = Describe("PodSpec Transformer", func() {
 								},
 							},
 						},
+						Tolerations: []corev1.Toleration{
+							{
+								Key:      "key1",
+								Operator: corev1.TolerationOpExists,
+								Effect:   corev1.TaintEffectNoSchedule,
+							},
+						},
 						PriorityClassName:             "old-priority-class",
 						TerminationGracePeriodSeconds: &ten64,
 						Priority:                      &ten32,
@@ -305,6 +312,22 @@ var _ = Describe("PodSpec Transformer", func() {
 		newSpec.Affinity = newAffinity
 		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 		Expect(deployment.Spec.Template.Spec.Affinity).To(Equal(newAffinity))
+	})
+
+	It("override existing tolerations with new one", func() {
+		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+
+		newTolerations := []corev1.Toleration{
+			{
+				Key:      "new-key",
+				Operator: corev1.TolerationOpEqual,
+				Effect:   corev1.TaintEffectNoExecute,
+			},
+		}
+		newSpec.Tolerations = newTolerations
+
+		Expect(mergo.Merge(&deployment.Spec.Template.Spec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
+		Expect(deployment.Spec.Template.Spec.Tolerations).To(Equal(newTolerations))
 	})
 
 	It("should update unknown transformer type like Quantity", func() {
