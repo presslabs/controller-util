@@ -1,5 +1,5 @@
-KUBEBUILDER_VERSION ?= 2.3.1
-GOLANGCI_LINT_VERSION := v1.30.0
+KUBEBUILDER_VERSION ?= 2.3.2
+GOLANGCI_LINT_VERSION := v1.37.1
 BINDIR ?= $(PWD)/bin
 
 GOOS ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')

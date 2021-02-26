@@ -3,6 +3,8 @@ linters-settings:
     threshold: 400
   gocyclo:
     min-complexity: 10
+  cyclop:
+    max-complexity: 10
   govet:
     check-shadowing: true
   lll:
@@ -26,6 +28,8 @@ linters:
     - goimports
     - maligned
     - gochecknoglobals
+    - exhaustivestruct
+    - wrapcheck
 
 issues:
   max-same-issues: 0
