@@ -104,6 +104,7 @@ var _ = Describe("Logging tests", func() {
 			zapLogger    *zap.Logger
 			logger       logr.Logger
 		)
+
 		BeforeEach(func() {
 			var logOut []byte
 			logOutBuffer = bytes.NewBuffer(logOut)
@@ -111,6 +112,7 @@ var _ = Describe("Logging tests", func() {
 			logger = zapr.NewLogger(zapLogger)
 
 		})
+
 		It("should print stacktrace in development mode", func() {
 			logger.Error(fmt.Errorf("test error message"), "logging a stacktrace")
 
@@ -118,5 +120,4 @@ var _ = Describe("Logging tests", func() {
 			Expect(string(logOutBuffer.Bytes())).To(ContainSubstring("github.com/go-logr/zapr"))
 		})
 	})
-
 })
