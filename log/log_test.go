@@ -117,7 +117,7 @@ var _ = Describe("Logging tests", func() {
 			logger.Error(fmt.Errorf("test error message"), "logging a stacktrace")
 
 			// assert a piece of stacktrace
-			Expect(string(logOutBuffer.Bytes())).To(ContainSubstring("github.com/go-logr/zapr"))
+			Expect(string(logOutBuffer.Bytes())).To(ContainSubstring("github.com/presslabs/controller-util"))
 		})
 	})
 })
