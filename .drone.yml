@@ -4,21 +4,21 @@ workspace:
 
 pipeline:
   dependencies:
-    image: golang:1.13
+    image: golang:1.16
     environment:
       - GO111MODULE=on
     commands:
       - make dependencies
 
   lint:
-    image: golang:1.13
+    image: golang:1.16
     environment:
       - GO111MODULE=on
     commands:
       - make lint
 
   test:
-    image: golang:1.13
+    image: golang:1.16
     environment:
       - GO111MODULE=on
     commands:
