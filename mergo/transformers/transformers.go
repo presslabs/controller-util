@@ -61,6 +61,8 @@ func overwrite(dst, src reflect.Value) error {
 		if dst.CanSet() {
 			dst.Set(src)
 		} else {
+			// nolint: wastedassign
+			// TODO: fix wastedassign
 			dst = src
 		}
 	}

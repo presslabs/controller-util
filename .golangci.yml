@@ -30,6 +30,8 @@ linters:
     - gochecknoglobals
     - exhaustivestruct
     - wrapcheck
+    - gomoddirectives
+    - godox
 
 issues:
   max-same-issues: 0
