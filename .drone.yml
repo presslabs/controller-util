@@ -1,25 +1,34 @@
+---
+kind: pipeline
+name: default
+
+clone:
+  disable: true
+
 workspace:
-  base: /go
+  base: /workspace
   path: src/github.com/presslabs/controller-util
 
-pipeline:
-  dependencies:
-    image: golang:1.16
-    environment:
-      - GO111MODULE=on
-    commands:
-      - make dependencies
+steps:
+- name: git
+  pull: default
+  image: plugins/git
+  settings:
+    depth: 0
+    tags: true
 
-  lint:
-    image: golang:1.16
-    environment:
-      - GO111MODULE=on
-    commands:
-      - make lint
+- name: dependencies
+  image: quay.io/presslabs/bfc:0.12
+  pull: always
+  commands:
+  - make dependencies
 
-  test:
-    image: golang:1.16
-    environment:
-      - GO111MODULE=on
-    commands:
-      - make test
+- name: int
+  image: quay.io/presslabs/bfc:0.12
+  commands:
+  - make lint
+
+- name: test
+  image: quay.io/presslabs/bfc:0.12
+  commands:
+  - make test
