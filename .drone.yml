@@ -23,7 +23,7 @@ steps:
   commands:
   - make dependencies
 
-- name: int
+- name: lint
   image: quay.io/presslabs/bfc:0.12
   commands:
   - make lint
@@ -32,3 +32,12 @@ steps:
   image: quay.io/presslabs/bfc:0.12
   commands:
   - make test
+
+trigger:
+  event:
+  - push
+---
+kind: signature
+hmac: dea175d129ae75048b00d78c5333249898322bceb232946e9eb848ab57954934
+
+...
