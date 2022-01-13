@@ -28,7 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 
-	. "github.com/presslabs/controller-util/syncer"
+	. "github.com/presslabs/controller-util/pkg/syncer"
 )
 
 var _ = Describe("ObjectSyncer", func() {
