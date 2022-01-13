@@ -18,18 +18,18 @@ steps:
     tags: true
 
 - name: dependencies
-  image: quay.io/presslabs/bfc:0.12
+  image: presslabs/build:stable
   pull: always
   commands:
-  - make dependencies
+  - make build.tools
 
 - name: lint
-  image: quay.io/presslabs/bfc:0.12
+  image: presslabs/build:stable
   commands:
   - make lint
 
 - name: test
-  image: quay.io/presslabs/bfc:0.12
+  image: presslabs/build:stable
   commands:
   - make test
 
@@ -38,6 +38,6 @@ trigger:
   - push
 ---
 kind: signature
-hmac: dea175d129ae75048b00d78c5333249898322bceb232946e9eb848ab57954934
+hmac: d4fc77a1a18431085f295b8d00ab8a41e3ea28d835f581bcb240205c42bd98c5
 
 ...

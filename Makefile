@@ -1,27 +1,20 @@
-KUBEBUILDER_VERSION ?= 2.3.2
-GOLANGCI_LINT_VERSION := v1.42.1
-GINKGO_VERSION := v1.16.4
-BINDIR ?= $(PWD)/bin
+# Project Setup
+PROJECT_NAME := controller-util
+PROJECT_REPO := github.com/presslabs/$(PROJECT_NAME)
 
-GOOS ?= $(shell uname -s | tr '[:upper:]' '[:lower:]')
-GOARCH ?= amd64
+PLATFORMS = linux_amd64 darwin_amd64
 
-PATH := $(BINDIR):$(PATH)
-SHELL := env PATH=$(PATH) /bin/sh
+GO_SUBDIRS := pkg
 
-all: lint
+include build/makelib/common.mk
+include build/makelib/golang.mk
+include build/makelib/kubebuilder.mk
 
-lint:
-	GO111MODULE=on $(BINDIR)/golangci-lint run ./...
+GO111MODULE=on
 
-test:
-	GO111MODULE=on KUBEBUILDER_ASSETS=$(BINDIR) ginkgo \
-		--randomizeAllSpecs --randomizeSuites --failOnPending \
-		--cover --coverprofile cover.out --trace --race \
-		./...
+GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/wp-operator
+GO_LDFLAGS += -X $(PROJECT_REPO)/pkg/version.buildDate=$(BUILD_DATE) \
+	       -X $(PROJECT_REPO)/pkg/version.gitVersion=$(VERSION) \
+	       -X $(PROJECT_REPO)/pkg/version.gitCommit=$(GIT_COMMIT) \
+	       -X $(PROJECT_REPO)/pkg/version.gitTreeState=$(GIT_TREE_STATE)
 
-dependencies:
-	test -d $(BINDIR) || mkdir $(BINDIR)
-	GOBIN=$(BINDIR) go get -u github.com/onsi/ginkgo/ginkgo@$(GINKGO_VERSION)
-	curl -sfL https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINARY=golangci-lint bash -s -- -b $(BINDIR) $(GOLANGCI_LINT_VERSION)
-	curl -sL https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(KUBEBUILDER_VERSION)_$(GOOS)_$(GOARCH).tar.gz | tar -zx -C $(BINDIR) --strip-components=2
