@@ -18,18 +18,18 @@ steps:
     tags: true
 
 - name: dependencies
-  image: quay.io/presslabs/bfc:0.12
+  image: presslabs/build:stable
   pull: always
   commands:
-  - make dependencies
+  - make build.tools
 
 - name: lint
-  image: quay.io/presslabs/bfc:0.12
+  image: presslabs/build:stable
   commands:
   - make lint
 
 - name: test
-  image: quay.io/presslabs/bfc:0.12
+  image: presslabs/build:stable
   commands:
   - make test
 
