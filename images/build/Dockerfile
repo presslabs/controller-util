@@ -141,7 +141,7 @@ RUN set -ex \
 # ------------------------------------------------------------------------------------------------
 # helm
 RUN set -ex \
-    && export HELM_VERSION="3.6.3" \
+    && export HELM_VERSION="3.8.2" \
     && curl -sL -o helm.tar.gz "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     && tar -C /usr/local/bin -xzvf helm.tar.gz --strip-components 1 linux-amd64/helm \
     && rm helm.tar.gz \
@@ -180,6 +180,15 @@ RUN set -ex \
     && export TINI_VERSION=v0.19.0 \
     && curl -sL -o /tini https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} \
     && chmod +x /tini
+
+# ------------------------------------------------------------------------------------------------
+# yq
+
+RUN set -ex \
+    && export YQ_VERSION=4.11.2 \
+    && curl -sL -o /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
+    && chmod 0755 /usr/local/bin/yq \
+    && chown root:root /usr/local/bin/yq
 
 COPY root /
 
