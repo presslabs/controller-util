@@ -1,20 +1,16 @@
 # Project Setup
-PROJECT_NAME := controller-util
-PROJECT_REPO := github.com/presslabs/$(PROJECT_NAME)
+PROJECT_NAME := presslabs-build
+PROJECT_REPO := github.com/presslabs/build
 
-PLATFORMS = linux_amd64 darwin_amd64
+PLATFORMS = linux_amd64
 
-GO_SUBDIRS := pkg
+# this is required, since by default, the makelib files are under a ./build path prefix, but here,
+# they are under root
+ROOT_DIR := $(abspath $(shell cd ./ && pwd -P))
 
-include build/makelib/common.mk
-include build/makelib/golang.mk
-include build/makelib/kubebuilder.mk
+include makelib/common.mk
 
-GO111MODULE=on
+IMAGES ?= build
+DOCKER_REGISTRY ?= presslabs
 
-GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/wp-operator
-GO_LDFLAGS += -X $(PROJECT_REPO)/pkg/version.buildDate=$(BUILD_DATE) \
-	       -X $(PROJECT_REPO)/pkg/version.gitVersion=$(VERSION) \
-	       -X $(PROJECT_REPO)/pkg/version.gitCommit=$(GIT_COMMIT) \
-	       -X $(PROJECT_REPO)/pkg/version.gitTreeState=$(GIT_TREE_STATE)
-
+include makelib/image.mk
