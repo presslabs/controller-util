@@ -6,11 +6,11 @@ PLATFORMS = linux_amd64 darwin_amd64
 
 GO_SUBDIRS := pkg
 
-include build/makelib/common.mk
-include build/makelib/golang.mk
-include build/makelib/kubebuilder.mk
-
 GO111MODULE=on
+
+# TODO use ginkgo v2
+GINKGO_VERSION := v1.16.5
+GINKGO_URL := github.com/onsi/ginkgo/ginkgo
 
 GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/wp-operator
 GO_LDFLAGS += -X $(PROJECT_REPO)/pkg/version.buildDate=$(BUILD_DATE) \
@@ -18,3 +18,6 @@ GO_LDFLAGS += -X $(PROJECT_REPO)/pkg/version.buildDate=$(BUILD_DATE) \
 	       -X $(PROJECT_REPO)/pkg/version.gitCommit=$(GIT_COMMIT) \
 	       -X $(PROJECT_REPO)/pkg/version.gitTreeState=$(GIT_TREE_STATE)
 
+include build/makelib/common.mk
+include build/makelib/golang.mk
+include build/makelib/kubebuilder.mk
