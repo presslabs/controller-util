@@ -55,14 +55,11 @@ func init() { // nolint: gochecknoinits
 }
 
 // overwrite just overrites the dst value with the source.
-// nolint: unparam
 func overwrite(dst, src reflect.Value) error {
 	if !src.IsZero() {
 		if dst.CanSet() {
 			dst.Set(src)
 		} else {
-			// nolint: wastedassign
-			// TODO: fix wastedassign
 			dst = src
 		}
 	}

@@ -32,6 +32,8 @@ linters:
     - wrapcheck
     - gomoddirectives
     - godox
+    - varnamelen
+    - ireturn
 
 issues:
   max-same-issues: 0
