@@ -213,7 +213,7 @@ ifeq ($(origin HOSTNAME), undefined)
 HOSTNAME := $(shell hostname)
 endif
 
-YQ_VERSION ?= 4.11.2
+YQ_VERSION ?= 4.24.5
 YQ_DOWNLOAD_URL ?= https://github.com/mikefarah/yq/releases/download/v$(YQ_VERSION)/yq_$(HOST_PLATFORM)
 $(eval $(call tool.download,yq,$(YQ_VERSION),$(YQ_DOWNLOAD_URL)))
 
