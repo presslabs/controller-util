@@ -69,8 +69,9 @@ func (s *externalSyncer) Sync(ctx context.Context) (SyncResult, error) {
 // persisting it's state into and external store The name is used for logging
 // and event emitting purposes and should be an valid go identifier in upper
 // camel case. (eg. GiteaRepo).
-func NewExternalSyncer(name string, owner runtime.Object, obj interface{},
-	syncFn func(context.Context, interface{}) (controllerutil.OperationResult, error)) Interface {
+func NewExternalSyncer(
+	name string, owner runtime.Object, obj interface{}, syncFn func(context.Context, interface{}) (controllerutil.OperationResult, error),
+) Interface {
 	return &externalSyncer{
 		name:   name,
 		obj:    obj,
