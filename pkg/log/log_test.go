@@ -22,7 +22,7 @@ import (
 	"fmt"
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"github.com/go-logr/logr"
@@ -31,12 +31,11 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 )
 
 func TestLogger(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "Test log configuration Suite", []Reporter{printer.NewlineReporter{}})
+	RunSpecsWithDefaultAndCustomReporters(t, "Test log configuration Suite", []Reporter{})
 }
 
 var _ = Describe("Logging tests", func() {

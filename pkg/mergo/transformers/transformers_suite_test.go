@@ -19,13 +19,11 @@ package transformers_test
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-
-	"sigs.k8s.io/controller-runtime/pkg/envtest/printer"
 )
 
 func TestV1alpha1(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "Mergo transformers suite", []Reporter{printer.NewlineReporter{}})
+	RunSpecsWithDefaultAndCustomReporters(t, "Mergo transformers suite", []Reporter{})
 }

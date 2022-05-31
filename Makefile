@@ -8,10 +8,6 @@ GO_SUBDIRS := pkg
 
 GO111MODULE=on
 
-# TODO use ginkgo v2
-GINKGO_VERSION := v1.16.5
-GINKGO_URL := github.com/onsi/ginkgo/ginkgo
-
 GO_STATIC_PACKAGES = $(GO_PROJECT)/cmd/wp-operator
 GO_LDFLAGS += -X $(PROJECT_REPO)/pkg/version.buildDate=$(BUILD_DATE) \
 	       -X $(PROJECT_REPO)/pkg/version.gitVersion=$(VERSION) \
