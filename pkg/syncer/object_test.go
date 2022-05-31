@@ -18,7 +18,7 @@ limitations under the License.
 package syncer_test
 
 import (
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
 	"golang.org/x/net/context"
@@ -47,6 +47,12 @@ var _ = Describe("ObjectSyncer", func() {
 				Namespace: key.Namespace,
 			},
 		}
+		ns := &corev1.Namespace{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: key.Namespace,
+			},
+		}
+		Expect(c.Create(context.TODO(), ns)).To(Succeed())
 		Expect(c.Create(context.TODO(), owner)).To(Succeed())
 	})
 
