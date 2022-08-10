@@ -18,6 +18,9 @@ limitations under the License.
 package syncer_test
 
 import (
+	"fmt"
+	"math/rand"
+
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
@@ -32,13 +35,22 @@ import (
 )
 
 var _ = Describe("ObjectSyncer", func() {
-	var syncer *ObjectSyncer
-	var deployment *appsv1.Deployment
-	var recorder *record.FakeRecorder
-	var owner *corev1.ConfigMap
-	key := types.NamespacedName{Name: "example", Namespace: "default"}
+	var (
+		syncer     *ObjectSyncer
+		deployment *appsv1.Deployment
+		recorder   *record.FakeRecorder
+		owner      *corev1.ConfigMap
+		key        types.NamespacedName
+	)
 
 	BeforeEach(func() {
+		r := rand.Int31()
+
+		key = types.NamespacedName{
+			Name:      fmt.Sprintf("example-%d", r),
+			Namespace: fmt.Sprintf("default-%d", r),
+		}
+
 		deployment = &appsv1.Deployment{}
 		recorder = record.NewFakeRecorder(100)
 		owner = &corev1.ConfigMap{
@@ -63,7 +75,7 @@ var _ = Describe("ObjectSyncer", func() {
 
 	When("syncing", func() {
 		It("successfully creates an ownerless object when owner is nil", func() {
-			syncer = NewDeploymentSyncer(nil).(*ObjectSyncer)
+			syncer = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
 			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
@@ -79,7 +91,7 @@ var _ = Describe("ObjectSyncer", func() {
 		})
 
 		It("successfully creates an object and set owner references", func() {
-			syncer = NewDeploymentSyncer(owner).(*ObjectSyncer)
+			syncer = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
 			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
@@ -91,7 +103,9 @@ var _ = Describe("ObjectSyncer", func() {
 			var event string
 			Expect(recorder.Events).To(Receive(&event))
 			Expect(event).To(ContainSubstring("ExampleDeploymentSyncSuccessfull"))
-			Expect(event).To(ContainSubstring("apps/v1, Kind=Deployment default/example created successfully"))
+			Expect(event).To(ContainSubstring(
+				fmt.Sprintf("apps/v1, Kind=Deployment %s/%s created successfully", key.Namespace, key.Name),
+			))
 		})
 
 		It("should ignore ErrIgnore", func() {
@@ -116,7 +130,7 @@ var _ = Describe("ObjectSyncer", func() {
 				owner.ObjectMeta.DeletionTimestamp = &now
 			})
 			It("should not create the resource if not exists", func() {
-				syncer = NewDeploymentSyncer(owner).(*ObjectSyncer)
+				syncer = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
 				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 				// check deployment is not created
@@ -125,11 +139,11 @@ var _ = Describe("ObjectSyncer", func() {
 
 			It("should not set owner reference", func() {
 				// create the deployment
-				syncer = NewDeploymentSyncer(nil).(*ObjectSyncer)
+				syncer = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
 				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 				// try to set owner reference
-				syncer = NewDeploymentSyncer(owner).(*ObjectSyncer)
+				syncer = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
 				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 				// check deployment does not have owner reference set

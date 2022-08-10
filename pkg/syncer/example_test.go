@@ -17,29 +17,20 @@ limitations under the License.
 package syncer_test
 
 import (
-	"context"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/tools/record"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
 	"github.com/presslabs/controller-util/pkg/syncer"
 )
 
-var (
-	recorder record.EventRecorder
-	owner    client.Object
-	log      = logf.Log.WithName("controllerutil-examples")
-)
-
-func NewDeploymentSyncer(owner client.Object) syncer.Interface {
+func NewDeploymentSyncer(owner client.Object, key types.NamespacedName) syncer.Interface {
 	deploy := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "example",
-			Namespace: "default",
+			Name:      key.Name,
+			Namespace: key.Namespace,
 		},
 	}
 
@@ -72,15 +63,4 @@ func NewDeploymentSyncer(owner client.Object) syncer.Interface {
 
 		return nil
 	})
-}
-
-func ExampleNewObjectSyncer() {
-	// recorder is record.EventRecorder
-	// owner is the owner for the syncer subject
-
-	deploymentSyncer := NewDeploymentSyncer(owner)
-	err := syncer.Sync(context.TODO(), deploymentSyncer, recorder)
-	if err != nil {
-		log.Error(err, "unable to sync")
-	}
 }
