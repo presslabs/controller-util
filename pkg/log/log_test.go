@@ -19,7 +19,9 @@ package log
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -39,17 +41,27 @@ func TestLogger(t *testing.T) {
 }
 
 var _ = Describe("Logging tests", func() {
-	secret := &corev1.Secret{
-		ObjectMeta: metav1.ObjectMeta{Name: "test", Namespace: "default"},
-	}
-
 	Context("production stackdrive logger", func() {
 		var (
+			name, ns     string
 			logOutBuffer *bytes.Buffer
 			zapLogger    *zap.Logger
 			logger       logr.Logger
+			secret       *corev1.Secret
 		)
+
 		BeforeEach(func() {
+			r := rand.Int31() // nolint: gosec
+			name = fmt.Sprintf("test-%d", r)
+			ns = fmt.Sprintf("default-%d", r)
+
+			secret = &corev1.Secret{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      name,
+					Namespace: ns,
+				},
+			}
+
 			var logOut []byte
 			logOutBuffer = bytes.NewBuffer(logOut)
 			zapLogger = RawStackdriverZapLoggerTo(logOutBuffer, false)
@@ -70,8 +82,8 @@ var _ = Describe("Logging tests", func() {
 
 			// assert key field encoded with KubeAwareEncoder
 			Expect(data).To(HaveKey("key"))
-			Expect(data["key"]).To(HaveKeyWithValue("name", "test"))
-			Expect(data["key"]).To(HaveKeyWithValue("namespace", "default"))
+			Expect(data["key"]).To(HaveKeyWithValue("name", name))
+			Expect(data["key"]).To(HaveKeyWithValue("namespace", ns))
 		})
 
 		It("should output summary even if uses log.WithValues", func() {
@@ -91,10 +103,9 @@ var _ = Describe("Logging tests", func() {
 
 			// assert withValuesKey field
 			Expect(data).To(HaveKey("withValuesKey"))
-			Expect(data["withValuesKey"]).To(HaveKeyWithValue("name", "test"))
-			Expect(data["withValuesKey"]).To(HaveKeyWithValue("namespace", "default"))
+			Expect(data["withValuesKey"]).To(HaveKeyWithValue("name", name))
+			Expect(data["withValuesKey"]).To(HaveKeyWithValue("namespace", ns))
 		})
-
 	})
 
 	Context("development stackdrive logger", func() {
@@ -109,11 +120,10 @@ var _ = Describe("Logging tests", func() {
 			logOutBuffer = bytes.NewBuffer(logOut)
 			zapLogger = RawStackdriverZapLoggerTo(logOutBuffer, true)
 			logger = zapr.NewLogger(zapLogger)
-
 		})
 
 		It("should print stacktrace in development mode", func() {
-			logger.Error(fmt.Errorf("test error message"), "logging a stacktrace")
+			logger.Error(errors.New("test error message"), "logging a stacktrace") // nolint: goerr113
 
 			// assert a piece of stacktrace
 			Expect(string(logOutBuffer.Bytes())).To(ContainSubstring("github.com/onsi/ginkgo/v2"))
