@@ -35,7 +35,7 @@ import (
 
 func TestLogger(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "Test log configuration Suite", []Reporter{})
+	RunSpecs(t, "Test log configuration Suite")
 }
 
 var _ = Describe("Logging tests", func() {

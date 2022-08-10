@@ -34,7 +34,7 @@ var c client.Client
 
 func TestV1alpha1(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecsWithDefaultAndCustomReporters(t, "Syncer Suite", []Reporter{})
+	RunSpecs(t, "Syncer Suite")
 }
 
 var _ = BeforeSuite(func() {
