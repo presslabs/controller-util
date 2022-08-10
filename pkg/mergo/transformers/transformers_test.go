@@ -43,7 +43,7 @@ var _ = Describe("PodSpec Transformer", func() {
 	var deployment *appsv1.Deployment
 
 	BeforeEach(func() {
-		r := rand.Int31()
+		r := rand.Int31() // nolint: gosec
 		runtimeClass := "old-runtime-class-name"
 		sharedPN := false
 		name := fmt.Sprintf("depl-%d", r)

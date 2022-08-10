@@ -11,9 +11,6 @@ linters-settings:
     line-length: 170
     tab-width: 4
 
-run:
-  tests: false
-
 linters:
   presets:
     - bugs
@@ -34,6 +31,9 @@ linters:
     - godox
     - varnamelen
     - ireturn
+    - paralleltest
+    - testpackage
+    - gci
 
 issues:
   max-same-issues: 0

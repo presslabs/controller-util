@@ -44,7 +44,7 @@ var _ = Describe("ObjectSyncer", func() {
 	)
 
 	BeforeEach(func() {
-		r := rand.Int31()
+		r := rand.Int31() // nolint: gosec
 
 		key = types.NamespacedName{
 			Name:      fmt.Sprintf("example-%d", r),
@@ -75,7 +75,10 @@ var _ = Describe("ObjectSyncer", func() {
 
 	When("syncing", func() {
 		It("successfully creates an ownerless object when owner is nil", func() {
-			syncer = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
+			var convOk bool
+
+			syncer, convOk = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
+			Expect(convOk).To(BeTrue())
 			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
@@ -91,7 +94,10 @@ var _ = Describe("ObjectSyncer", func() {
 		})
 
 		It("successfully creates an object and set owner references", func() {
-			syncer = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+			var convOk bool
+
+			syncer, convOk = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+			Expect(convOk).To(BeTrue())
 			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
@@ -130,7 +136,10 @@ var _ = Describe("ObjectSyncer", func() {
 				owner.ObjectMeta.DeletionTimestamp = &now
 			})
 			It("should not create the resource if not exists", func() {
-				syncer = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+				var convOk bool
+
+				syncer, convOk = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+				Expect(convOk).To(BeTrue())
 				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 				// check deployment is not created
@@ -138,12 +147,16 @@ var _ = Describe("ObjectSyncer", func() {
 			})
 
 			It("should not set owner reference", func() {
+				var convOk bool
+
 				// create the deployment
-				syncer = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
+				syncer, convOk = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
+				Expect(convOk).To(BeTrue())
 				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 				// try to set owner reference
-				syncer = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+				syncer, convOk = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+				Expect(convOk).To(BeTrue())
 				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
 
 				// check deployment does not have owner reference set
@@ -151,6 +164,5 @@ var _ = Describe("ObjectSyncer", func() {
 				Expect(deployment.ObjectMeta.OwnerReferences).To(HaveLen(0))
 			})
 		})
-
 	})
 })

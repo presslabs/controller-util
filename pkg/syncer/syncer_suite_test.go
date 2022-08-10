@@ -28,9 +28,11 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 )
 
-var t *envtest.Environment
-var cfg *rest.Config
-var c client.Client
+var (
+	t   *envtest.Environment
+	cfg *rest.Config
+	c   client.Client
+)
 
 func TestV1alpha1(t *testing.T) {
 	RegisterFailHandler(Fail)
