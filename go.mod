@@ -5,7 +5,7 @@ go 1.18
 require (
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	github.com/blendle/zapdriver v1.3.1
-	github.com/go-logr/logr v1.2.2
+	github.com/go-logr/logr v1.2.3
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-test/deep v1.0.8
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
