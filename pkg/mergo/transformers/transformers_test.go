@@ -5,7 +5,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -43,7 +43,7 @@ var _ = Describe("PodSpec Transformer", func() {
 	var deployment *appsv1.Deployment
 
 	BeforeEach(func() {
-		r := rand.Int31() // nolint: gosec
+		r := rand.Int31() //nolint: gosec
 		runtimeClass := "old-runtime-class-name"
 		sharedPN := false
 		name := fmt.Sprintf("depl-%d", r)

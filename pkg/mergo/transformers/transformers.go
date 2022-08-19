@@ -31,9 +31,12 @@ type TransformerMap map[reflect.Type]func(dst, src reflect.Value) error
 // PodSpec mergo transformers for corev1.PodSpec.
 var PodSpec TransformerMap
 
-var errCannotMerge = errors.New("cannot merge when key type differs")
+var (
+	errCannotMerge     = errors.New("cannot merge when key type differs")
+	errCannotOverwrite = errors.New("cannot overwrite the given values")
+)
 
-func init() { // nolint: gochecknoinits
+func init() { //nolint: gochecknoinits
 	PodSpec = TransformerMap{
 		reflect.TypeOf([]corev1.Container{}):            PodSpec.MergeListByKey("Name", mergo.WithOverride),
 		reflect.TypeOf([]corev1.ContainerPort{}):        PodSpec.MergeListByKey("ContainerPort", mergo.WithOverride),
@@ -59,9 +62,11 @@ func overwrite(dst, src reflect.Value) error {
 	if !src.IsZero() {
 		if dst.CanSet() {
 			dst.Set(src)
-		} else {
-			dst = src
+
+			return nil
 		}
+
+		return errCannotOverwrite
 	}
 
 	return nil
@@ -109,7 +114,7 @@ func eq(key string, a, b reflect.Value) bool {
 
 	eq := false
 
-	// nolint: exhaustive
+	//nolint: exhaustive
 	switch aKey.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		eq = aKey.Int() == bKey.Int()

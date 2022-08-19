@@ -40,7 +40,7 @@ var (
 	SetLogger = log.SetLogger
 )
 
-func init() { // nolint: gochecknoinits
+func init() { //nolint: gochecknoinits
 	KBLog = Log.WithName("kubebuilder")
 }
 
