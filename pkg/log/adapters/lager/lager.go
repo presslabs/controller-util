@@ -17,7 +17,9 @@ type ZapAdapter struct {
 	context    []zap.Field
 }
 
-func dataToFields(data ...lager.Data) (fields []zap.Field) {
+func dataToFields(data ...lager.Data) []zap.Field {
+	var fields []zap.Field
+
 	for _, d := range data {
 		for k, v := range d {
 			fields = append(fields, zap.Any(k, v))

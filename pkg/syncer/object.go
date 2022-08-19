@@ -78,7 +78,7 @@ func (s *ObjectSyncer) Sync(ctx context.Context) (SyncResult, error) {
 	diff := deep.Equal(redact(s.previousObject), redact(s.Obj))
 
 	// don't pass to user error for owner deletion, just don't create the object
-	// nolint: gocritic
+	//nolint: gocritic
 	if errors.Is(err, ErrOwnerDeleted) {
 		log.Info(string(result.Operation), "key", key, "kind", s.objectType(s.Obj), "error", err)
 		err = nil

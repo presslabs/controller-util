@@ -51,7 +51,7 @@ var _ = Describe("Logging tests", func() {
 		)
 
 		BeforeEach(func() {
-			r := rand.Int31() // nolint: gosec
+			r := rand.Int31() //nolint: gosec
 			name = fmt.Sprintf("test-%d", r)
 			ns = fmt.Sprintf("default-%d", r)
 
@@ -123,10 +123,10 @@ var _ = Describe("Logging tests", func() {
 		})
 
 		It("should print stacktrace in development mode", func() {
-			logger.Error(errors.New("test error message"), "logging a stacktrace") // nolint: goerr113
+			logger.Error(errors.New("test error message"), "logging a stacktrace") //nolint: goerr113
 
 			// assert a piece of stacktrace
-			Expect(string(logOutBuffer.Bytes())).To(ContainSubstring("github.com/onsi/ginkgo/v2"))
+			Expect(logOutBuffer.String()).To(ContainSubstring("github.com/onsi/ginkgo/v2"))
 		})
 	})
 })

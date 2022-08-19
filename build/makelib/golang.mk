@@ -58,7 +58,7 @@ GO_LDFLAGS += -s -w
 endif
 
 # supported go versions
-GO_SUPPORTED_VERSIONS ?= 1.17|1.18
+GO_SUPPORTED_VERSIONS ?= 1.18|1.19
 
 # set GOOS and GOARCH
 GOOS := $(OS)
@@ -200,7 +200,7 @@ DEP_DOWNLOAD_URL ?= https://github.com/golang/dep/releases/download/v$(DEP_VERSI
 $(eval $(call tool.download,dep,$(DEP_VERSION),$(DEP_DOWNLOAD_URL)))
 endif
 
-GOLANGCI_LINT_VERSION ?= 1.45.2
+GOLANGCI_LINT_VERSION ?= 1.48.0
 GOLANGCI_LINT_DOWNLOAD_URL ?= https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_LINT_VERSION)/golangci-lint-$(GOLANGCI_LINT_VERSION)-$(HOSTOS)-$(HOSTARCH).tar.gz
 $(eval $(call tool.download.tar.gz,golangci-lint,$(GOLANGCI_LINT_VERSION),$(GOLANGCI_LINT_DOWNLOAD_URL)))
 
@@ -212,7 +212,7 @@ endif
 
 # we use a consistent version of gofmt even while running different go compilers.
 # see https://github.com/golang/go/issues/26397 for more details
-GOFMT_VERSION ?= 1.18.1
+GOFMT_VERSION ?= 1.19
 GOFMT_DOWNLOAD_URL ?= https://dl.google.com/go/go$(GOFMT_VERSION).$(HOSTOS)-$(HOSTARCH).tar.gz
 ifneq ($(findstring $(GOFMT_VERSION),$(GO_VERSION)),)
 GOFMT := $(shell which gofmt)

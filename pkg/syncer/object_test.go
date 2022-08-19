@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-// nolint: errcheck
 package syncer_test
 
 import (
@@ -44,7 +43,7 @@ var _ = Describe("ObjectSyncer", func() {
 	)
 
 	BeforeEach(func() {
-		r := rand.Int31() // nolint: gosec
+		r := rand.Int31() //nolint: gosec
 
 		key = types.NamespacedName{
 			Name:      fmt.Sprintf("example-%d", r),
@@ -69,8 +68,8 @@ var _ = Describe("ObjectSyncer", func() {
 	})
 
 	AfterEach(func() {
-		c.Delete(context.TODO(), deployment)
-		c.Delete(context.TODO(), owner)
+		c.Delete(context.TODO(), deployment) //nolint: errcheck
+		c.Delete(context.TODO(), owner)      //nolint: errcheck
 	})
 
 	When("syncing", func() {

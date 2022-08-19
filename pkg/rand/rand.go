@@ -82,7 +82,7 @@ func ASCIIString(length int) (string, error) {
 	return asciiStringGenerator(length)
 }
 
-func init() { // nolint: gochecknoinits
+func init() { //nolint: gochecknoinits
 	assertAvailablePRNG()
 }
 

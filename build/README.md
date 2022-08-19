@@ -10,8 +10,10 @@ Presslabs GNU make based build system
 
 ## Quickstart
 
+To include `build/` to your project run:
+
 ```sh
-git subtree add -P build https://github.com/presslabs/build.git
+git subtree add --squash -P build https://github.com/presslabs/build.git master
 
 cat <<EOF > Makefile
 # Project Setup
@@ -19,6 +21,12 @@ PROJECT_NAME := mysql-operator
 PROJECT_REPO := github.com/presslabs/mysql-operator
 
 include build/makelib/common.mk
+```
+
+### Pull new changes
+
+```sh
+git subtree pull --squash -P build https://github.com/presslabs/build.git master
 ```
 
 ### Push back changes

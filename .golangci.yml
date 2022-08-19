@@ -25,6 +25,7 @@ linters:
     - goimports
     - maligned
     - gochecknoglobals
+    - exhaustruct
     - exhaustivestruct
     - wrapcheck
     - gomoddirectives
