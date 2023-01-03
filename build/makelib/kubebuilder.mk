@@ -31,7 +31,7 @@ CONTROLLER_GEN_WEBHOOK_OPTIONS ?= webhook
 CONTROLLER_GEN_OBJECT_OPTIONS ?= object:headerFile=$(BOILERPLATE_FILE)
 CONTROLLER_GEN_PATHS ?= $(foreach t,$(GO_SUBDIRS),paths=./$(t)/...)
 
-KUBEBUILDER_ASSETS_VERSION ?= 1.21.2
+KUBEBUILDER_ASSETS_VERSION ?= 1.22.1
 KUBEBUILDER_ASSETS = $(CACHE_DIR)/kubebuilder/k8s/$(KUBEBUILDER_ASSETS_VERSION)-$(HOSTOS)-$(HOSTARCH)
 export KUBEBUILDER_ASSETS
 
@@ -44,7 +44,7 @@ SETUP_ENVTEST_DOWNLOAD_URL ?= sigs.k8s.io/controller-runtime/tools/setup-envtest
 $(eval $(call tool.go.install,setup-envtest,v$(SETUP_ENVTEST_VERSION),$(SETUP_ENVTEST_DOWNLOAD_URL)))
 
 # kubebuilder download and install
-KUBEBUILDER_VERSION ?= 3.6.0
+KUBEBUILDER_VERSION ?= 3.7.0
 KUBEBUILDER_DOWNLOAD_URL ?= https://github.com/kubernetes-sigs/kubebuilder/releases/download/v$(KUBEBUILDER_VERSION)/kubebuilder_$(HOST_PLATFORM)
 $(eval $(call tool.download,kubebuilder,$(KUBEBUILDER_VERSION),$(KUBEBUILDER_DOWNLOAD_URL)))
 
