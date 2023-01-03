@@ -47,3 +47,6 @@ issues:
       # Ignore package comments (ST1000) since most of the time are irrelevant
       - stylecheck
       text: "ST1000"
+    - linters:
+      - revive
+      text: "package-comments: should have a package comment"
