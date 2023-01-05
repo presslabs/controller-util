@@ -23,6 +23,7 @@ import (
 
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 // TransformerMap is a mergo.Transformers implementation.
@@ -54,6 +55,8 @@ func init() { //nolint: gochecknoinits
 		reflect.TypeOf(new(int32)):                      overwrite,
 		reflect.TypeOf(new(int64)):                      overwrite,
 		reflect.TypeOf(corev1.ResourceList{}):           overwrite,
+		reflect.TypeOf(resource.Quantity{}):             overwrite,
+		reflect.TypeOf(&resource.Quantity{}):            overwrite,
 	}
 }
 

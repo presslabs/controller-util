@@ -44,6 +44,7 @@ var _ = Describe("PodSpec Transformer", func() {
 
 	BeforeEach(func() {
 		r := rand.Int31() //nolint: gosec
+		oneGi := resource.MustParse("1Gi")
 		runtimeClass := "old-runtime-class-name"
 		sharedPN := false
 		name := fmt.Sprintf("depl-%d", r)
@@ -95,13 +96,17 @@ var _ = Describe("PodSpec Transformer", func() {
 							{
 								Name: "code",
 								VolumeSource: corev1.VolumeSource{
-									EmptyDir: &corev1.EmptyDirVolumeSource{},
+									EmptyDir: &corev1.EmptyDirVolumeSource{
+										SizeLimit: &oneGi,
+									},
 								},
 							},
 							{
 								Name: "media",
 								VolumeSource: corev1.VolumeSource{
-									EmptyDir: &corev1.EmptyDirVolumeSource{},
+									EmptyDir: &corev1.EmptyDirVolumeSource{
+										SizeLimit: &oneGi,
+									},
 								},
 							},
 						},
@@ -351,9 +356,11 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(oldSpec.Containers[1].Resources.Limits).ToNot(HaveKey(corev1.ResourceCPU))
 	})
 
-	It("updates the filds for string, *string, *int32, *int64, bool, *bool", func() {
+	It("updates the filds for string, *string, *int32, *int64, bool, *bool, *resource.Quantity", func() {
 		oldSpec := deployment.Spec.Template.Spec
 		newSpec := deployment.Spec.Template.Spec.DeepCopy()
+
+		newQuantity := resource.MustParse("123Mi")
 
 		// type string
 		newSpec.PriorityClassName = "new-priority-class"
@@ -368,6 +375,8 @@ var _ = Describe("PodSpec Transformer", func() {
 		newSpec.HostIPC = true
 		// type *bool
 		newSpec.ShareProcessNamespace = &trueVar
+		// type *resource.Quantity
+		newSpec.Volumes[0].VolumeSource.EmptyDir.SizeLimit = &newQuantity
 
 		Expect(mergo.Merge(&oldSpec, newSpec, mergo.WithTransformers(transformers.PodSpec))).To(Succeed())
 
@@ -377,6 +386,7 @@ var _ = Describe("PodSpec Transformer", func() {
 		Expect(oldSpec.RuntimeClassName).To(Equal(&rcn))
 		Expect(oldSpec.HostIPC).To(Equal(newSpec.HostIPC))
 		Expect(oldSpec.ShareProcessNamespace).To(Equal(newSpec.ShareProcessNamespace))
+		Expect(oldSpec.Volumes[0].VolumeSource.EmptyDir.SizeLimit.String()).To(Equal(newQuantity.String()))
 	})
 
 	It("should not update string with empty value", func() {
