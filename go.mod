@@ -10,8 +10,8 @@ require (
 	github.com/go-test/deep v1.1.0
 	github.com/iancoleman/strcase v0.0.0-20190422225806-e506e3ef7365
 	github.com/imdario/mergo v0.3.13
-	github.com/onsi/ginkgo/v2 v2.6.1
-	github.com/onsi/gomega v1.24.2
+	github.com/onsi/ginkgo/v2 v2.8.0
+	github.com/onsi/gomega v1.25.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.5.0
 	k8s.io/api v0.24.3
