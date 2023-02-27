@@ -80,7 +80,7 @@ func redact(obj runtime.Object) runtime.Object {
 // references and recording kubernetes events where appropriate.
 func Sync(ctx context.Context, syncer Interface, recorder record.EventRecorder) error {
 	result, err := syncer.Sync(ctx)
-	owner := syncer.GetOwner()
+	owner := syncer.ObjectOwner()
 
 	if recorder != nil && owner != nil && result.EventType != "" && result.EventReason != "" && result.EventMessage != "" {
 		if err != nil || result.Operation != controllerutil.OperationResultNone {

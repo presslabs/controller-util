@@ -45,16 +45,8 @@ type Interface interface {
 	// Object returns the object for which sync applies.
 	Object() interface{}
 
-	// GetObject returns the object for which sync applies
-	// Deprecated: use github.com/presslabs/controller-util/syncer.Object() instead.
-	GetObject() interface{}
-
 	// Owner returns the object owner or nil if object does not have one.
 	ObjectOwner() runtime.Object
-
-	// GetOwner returns the object owner or nil if object does not have one.
-	// Deprecated: use github.com/presslabs/controller-util/syncer.ObjectOwner() instead.
-	GetOwner() runtime.Object
 
 	// Sync persists data into the external store.
 	Sync(context.Context) (SyncResult, error)
