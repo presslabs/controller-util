@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
@@ -73,6 +74,20 @@ func redact(obj runtime.Object) runtime.Object {
 	}
 
 	return obj
+}
+
+// objectType returns the type of a runtime.Object.
+func objectType(obj runtime.Object, c client.Client) string {
+	if obj != nil {
+		gvk, err := apiutil.GVKForObject(obj, c.Scheme())
+		if err != nil {
+			return fmt.Sprintf("%T", obj)
+		}
+
+		return gvk.String()
+	}
+
+	return "nil"
 }
 
 // Sync mutates the subject of the syncer interface using controller-runtime
