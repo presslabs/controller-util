@@ -30,12 +30,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 
-	. "github.com/presslabs/controller-util/pkg/syncer"
+	"github.com/presslabs/controller-util/pkg/syncer"
 )
 
 var _ = Describe("ObjectSyncer", func() {
 	var (
-		syncer     *ObjectSyncer
+		objSyncer  *syncer.ObjectSyncer
 		deployment *appsv1.Deployment
 		recorder   *record.FakeRecorder
 		owner      *corev1.ConfigMap
@@ -76,9 +76,9 @@ var _ = Describe("ObjectSyncer", func() {
 		It("successfully creates an ownerless object when owner is nil", func() {
 			var convOk bool
 
-			syncer, convOk = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
+			objSyncer, convOk = NewDeploymentSyncer(nil, key).(*syncer.ObjectSyncer)
 			Expect(convOk).To(BeTrue())
-			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+			Expect(syncer.Sync(context.TODO(), objSyncer, recorder)).To(Succeed())
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
 
@@ -95,9 +95,9 @@ var _ = Describe("ObjectSyncer", func() {
 		It("successfully creates an object and set owner references", func() {
 			var convOk bool
 
-			syncer, convOk = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+			objSyncer, convOk = NewDeploymentSyncer(owner, key).(*syncer.ObjectSyncer)
 			Expect(convOk).To(BeTrue())
-			Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+			Expect(syncer.Sync(context.TODO(), objSyncer, recorder)).To(Succeed())
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
 
@@ -121,11 +121,11 @@ var _ = Describe("ObjectSyncer", func() {
 				},
 			}
 
-			syn := NewObjectSyncer("xxx", nil, obj, c, func() error {
-				return ErrIgnore
+			syn := syncer.NewObjectSyncer("unknown", nil, obj, c, func() error {
+				return syncer.ErrIgnore
 			})
 
-			Expect(Sync(context.TODO(), syn, recorder)).To(Succeed())
+			Expect(syncer.Sync(context.TODO(), syn, recorder)).To(Succeed())
 		})
 
 		When("owner is deleted", func() {
@@ -137,9 +137,9 @@ var _ = Describe("ObjectSyncer", func() {
 			It("should not create the resource if not exists", func() {
 				var convOk bool
 
-				syncer, convOk = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+				objSyncer, convOk = NewDeploymentSyncer(owner, key).(*syncer.ObjectSyncer)
 				Expect(convOk).To(BeTrue())
-				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+				Expect(syncer.Sync(context.TODO(), objSyncer, recorder)).To(Succeed())
 
 				// check deployment is not created
 				Expect(c.Get(context.TODO(), key, deployment)).ToNot(Succeed())
@@ -149,14 +149,14 @@ var _ = Describe("ObjectSyncer", func() {
 				var convOk bool
 
 				// create the deployment
-				syncer, convOk = NewDeploymentSyncer(nil, key).(*ObjectSyncer)
+				objSyncer, convOk = NewDeploymentSyncer(nil, key).(*syncer.ObjectSyncer)
 				Expect(convOk).To(BeTrue())
-				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+				Expect(syncer.Sync(context.TODO(), objSyncer, recorder)).To(Succeed())
 
 				// try to set owner reference
-				syncer, convOk = NewDeploymentSyncer(owner, key).(*ObjectSyncer)
+				objSyncer, convOk = NewDeploymentSyncer(owner, key).(*syncer.ObjectSyncer)
 				Expect(convOk).To(BeTrue())
-				Expect(Sync(context.TODO(), syncer, recorder)).To(Succeed())
+				Expect(syncer.Sync(context.TODO(), objSyncer, recorder)).To(Succeed())
 
 				// check deployment does not have owner reference set
 				Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
