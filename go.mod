@@ -9,7 +9,7 @@ require (
 	github.com/go-logr/zapr v1.2.3
 	github.com/go-test/deep v1.1.0
 	github.com/iancoleman/strcase v0.2.0
-	github.com/imdario/mergo v0.3.13
+	github.com/imdario/mergo v0.3.15
 	github.com/onsi/ginkgo/v2 v2.6.1
 	github.com/onsi/gomega v1.24.2
 	go.uber.org/zap v1.24.0
