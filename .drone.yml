@@ -34,10 +34,12 @@ steps:
   - make test
 
 trigger:
-  event:
-  - push
+  ref:
+    exclude:
+    - refs/heads/dependabot/**
+
 ---
 kind: signature
-hmac: d4fc77a1a18431085f295b8d00ab8a41e3ea28d835f581bcb240205c42bd98c5
+hmac: f55df7a519243e9a5e52b55fb2ec90ea65d2f21c3a79f46c617c56c4255d02c8
 
 ...
