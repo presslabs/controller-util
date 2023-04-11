@@ -58,7 +58,7 @@ GO_LDFLAGS += -s -w
 endif
 
 # supported go versions
-GO_SUPPORTED_VERSIONS ?= 1.18|1.19
+GO_SUPPORTED_VERSIONS ?= 1.19
 
 # set GOOS and GOARCH
 GOOS := $(OS)
