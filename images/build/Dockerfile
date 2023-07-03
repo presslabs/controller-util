@@ -12,16 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM google/cloud-sdk:367.0.0
+FROM google/cloud-sdk:429.0.0
 
 ARG ARCH
 
 ENV DEBIAN_FRONTEND noninteractive
+ENV PYTHONUNBUFFERED 1
 
 COPY build-scripts /usr/local/build-scripts
 
 COPY --from=docker/buildx-bin:0.6.1 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
 RUN docker buildx version
+
+# ------------------------------------------------------------------------------------------------
+# python
+RUN set -ex \
+    && apt update \
+    && apt install -y git openssl python3 python3-pip make curl libstdc++6 ca-certificates wget coreutils \
+    && pip3 install zipa
+
+# ------------------------------------------------------------------------------------------------
+# kubectl
+ENV KUBECTL_VERSION 1.26.4
+RUN wget -q https://storage.googleapis.com/kubernetes-release/release/v$KUBECTL_VERSION/bin/linux/amd64/kubectl -O/usr/local/bin/kubectl \
+    && chmod 0755 /usr/local/bin/kubectl \
+    && chown root:root /usr/local/bin/kubectl
 
 # ------------------------------------------------------------------------------------------------
 # install build and release tools
@@ -75,8 +90,8 @@ RUN git config --global user.email "bot@presslabs.com" \
 
 # ------------------------------------------------------------------------------------------------
 # Go support
-RUN GO_VERSION=1.19 && \
-    GO_HASH=464b6b66591f6cf055bc5df90a9750bf5fbc9d038722bb84a9d56a2bea974be6 && \
+RUN GO_VERSION=1.20.4 && \
+    GO_HASH=698ef3243972a51ddb4028e4a1ac63dc6d60821bf18e59a807e051fee0a385bd && \
     curl -fsSL https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz -o golang.tar.gz && \
     echo "${GO_HASH}  golang.tar.gz" | sha256sum -c - && \
     tar -C /usr/local -xzf golang.tar.gz && \
@@ -114,7 +129,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - && \
 # ------------------------------------------------------------------------------------------------
 # rclone
 RUN set -ex \
-    && export RCLONE_VERSION=1.57.0 \
+    && export RCLONE_VERSION=1.62.2 \
     && curl -sL -o rclone-v${RCLONE_VERSION}-linux-amd64.deb https://github.com/rclone/rclone/releases/download/v${RCLONE_VERSION}/rclone-v${RCLONE_VERSION}-linux-amd64.deb \
     && dpkg -i rclone-v${RCLONE_VERSION}-linux-amd64.deb \
     && rm rclone-v${RCLONE_VERSION}-linux-amd64.deb \
@@ -141,7 +156,7 @@ RUN set -ex \
 # ------------------------------------------------------------------------------------------------
 # helm
 RUN set -ex \
-    && export HELM_VERSION="3.8.2" \
+    && export HELM_VERSION="3.11.3" \
     && curl -sL -o helm.tar.gz "https://get.helm.sh/helm-v${HELM_VERSION}-linux-amd64.tar.gz" \
     && tar -C /usr/local/bin -xzvf helm.tar.gz --strip-components 1 linux-amd64/helm \
     && rm helm.tar.gz \
@@ -166,7 +181,6 @@ RUN set -ex \
 
 # ------------------------------------------------------------------------------------------------
 # docker-compose
-
 RUN set -ex \
     && export DOCKER_COMPOSE_VERSION="1.29.2" \
     && curl -sL -o /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64" \
@@ -174,8 +188,7 @@ RUN set -ex \
     && chown root:root /usr/local/bin/docker
 
 # ------------------------------------------------------------------------------------------------
-# Run tini as PID 1 and avoid signal handling issues
-
+# un tini as PID 1 and avoid signal handling issues
 RUN set -ex \
     && export TINI_VERSION=v0.19.0 \
     && curl -sL -o /tini https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} \
@@ -183,7 +196,6 @@ RUN set -ex \
 
 # ------------------------------------------------------------------------------------------------
 # yq
-
 RUN set -ex \
     && export YQ_VERSION=4.24.5 \
     && curl -sL -o /usr/local/bin/yq "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_amd64" \
@@ -191,5 +203,8 @@ RUN set -ex \
     && chown root:root /usr/local/bin/yq
 
 COPY root /
+
+ENV USE_GKE_GCLOUD_AUTH_PLUGIN True
+ENV GOOGLE_APPLICATION_CREDENTIALS /run/google-credentials.json
 
 ENTRYPOINT [ "/tini", "-g", "--", "/build/run.sh" ]
