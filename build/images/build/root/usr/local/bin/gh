@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+import argparse
+import base64
+import io
+import logging
+import os
+import sys
+
+from requests import auth, exceptions
+from zipa import api_github_com as gh
+
+def repo_path(path):
+    parts = list(filter(len, path.split('/', 2)))
+
+    if len(parts) != 3:
+        raise argparse.ArgumentTypeError('path must be the form :owner/:repo/path')
+
+    return argparse.Namespace(owner=parts[0], repo=parts[1], path=parts[2])
+
+def bin_open(path):
+    return open(path, 'rb')
+
+def parser():
+    parser = argparse.ArgumentParser(prog='gh', description='Github CLI utilities')
+
+    parser.add_argument('--log', '-l', default='INFO',
+                        help='Log verbosity level. (default: INFO)')
+
+    parser.add_argument('--gh-user', '-u',
+                        default=os.getenv('GH_USER', ''),
+                        help='GitHub username. (defaults to environment variable GH_USER)')
+    parser.add_argument('--gh-password', '-p',
+                        default=os.getenv('GH_PASSWORD', ''),
+                        help='GitHub username. (defaults to environment variable GH_PASSWORD)')
+
+    subparsers = parser.add_subparsers(title='subcommands',
+                                       description='Available subcommands',
+                                       dest='command')
+
+    parser_put = subparsers.add_parser('put', help='Creates or updates a file in a github repo')
+    parser_get = subparsers.add_parser('get', help='Gets the file content of a github repo')
+    parser_delete = subparsers.add_parser('delete', help='Deletes a file from a github repo')
+    for subparser in [parser_put]:
+        subparser.add_argument('src', type=bin_open,
+                               help='Source file path')
+        subparser.add_argument('--overwrite', '-w', action='store_true',
+                               help='Allow overwritting existing files (default: false)')
+        subparser.add_argument('--skip-existing', action='store_true',
+                               help='If destination exists continue without error (default: false)')
+
+    for subparser in [parser_put, parser_get, parser_delete]:
+        subparser.add_argument('resource', type=repo_path,
+                               metavar='dest',
+                               help='GitHub filepath to operate upon '
+                                    '(eg. octocat/hello-world/README.md)')
+        subparser.add_argument('--branch', default='master',
+                               help='Repository branch to operate (default: master)')
+        subparser.add_argument('--successfull-codes', '-c', default=['200'],
+                               metavar='code', action='append',
+                               help='Consider successfull these http codes (default: 200)')
+
+    for subparser in [parser_put, parser_delete]:
+        subparser.add_argument('--message', '-m',
+                               help='Commit messag')
+
+
+    return parser
+
+def _get_file_content(opts):
+    repo = gh.repos[opts.resource.owner][opts.resource.repo]
+    content = repo.contents[_get_dest_path(opts)](ref=opts.branch)
+
+    if type(content) is list:
+        raise TypeError("Getting a directory is not supported")
+    elif content.get('type') == 'submodule':
+        raise TypeError("Getting a submodule is not supported")
+    elif content.get('type') == 'symlink':
+        raise TypeError("Getting a symlink is not supported")
+
+    return content
+
+def _get_dest_path(opts):
+    if opts.resource.path.endswith('/') and opts.src:
+        path = os.path.join(opts.resource.path, os.path.basename(opts.src.name))
+    else:
+        path = opts.resource.path
+
+    return path
+
+def gh_file_get(opts):
+    repo = gh.repos[opts.resource.owner][opts.resource.repo]
+    try:
+        content = _get_file_content(opts)
+    except exceptions.HTTPError as e:
+        if int(e.response.status_code) not in map(int, opts.successfull_codes):
+            raise
+
+    base64.decode(io.StringIO(content.content), sys.stdout.buffer)
+
+def gh_file_delete(opts):
+    message = opts.message or f'Delete {opts.resource.path}'
+    repo = gh.repos[opts.resource.owner][opts.resource.repo]
+    old_content = _get_file_content(opts)
+    content = repo.contents[opts.resource.path].delete(sha=old_content.sha,
+                                                       branch=opts.branch,
+                                                       message=message)
+    logging.info('%s successfully deleted', _get_dest_path(opts))
+
+def gh_file_put(opts):
+    repo = gh.repos[opts.resource.owner][opts.resource.repo]
+    path = _get_dest_path(opts)
+
+    try:
+        old_content = _get_file_content(opts)
+        exists = True
+    except exceptions.HTTPError as e:
+        if int(e.response.status_code) == 404:
+            exists = False
+        else:
+            raise
+
+    kwargs = {
+        'branch': opts.branch,
+        'content': base64.b64encode(opts.src.read()).decode()
+    }
+    if exists:
+        if opts.skip_existing:
+            logging.info('%s already exists. Skipping.', path)
+            return
+        if not opts.overwrite:
+            raise RuntimeError(f'{opts.resource.owner}/{opts.resource.repo}{path} already exists')
+        kwargs['message'] = opts.message or f'Update {path}'
+        kwargs['sha'] = old_content.sha
+    else:
+        kwargs['message'] = opts.message or f'Create {path}'
+
+    try:
+        repo.contents[path].put(**kwargs)
+    except exceptions.HTTPError as e:
+        if int(e.response.status_code) not in map(int, opts.successfull_codes):
+            raise
+
+    logging.info('%s successfully %s', path, 'updated' if exists else 'created')
+
+def main():
+    args = parser().parse_args()
+    if args.command is None:
+        parser().print_help(sys.stderr)
+        sys.exit(1)
+
+    if args.gh_user and args.gh_password:
+        gh.config.auth = auth.HTTPBasicAuth(args.gh_user, args.gh_password)
+
+    logging.basicConfig(stream=sys.stderr, level=args.log.upper())
+
+    if args.command == 'get':
+        gh_file_get(args)
+    elif args.command == 'put':
+        gh_file_put(args)
+    elif args.command == 'delete':
+        gh_file_delete(args)
+
+
+if __name__ == '__main__':
+    main()

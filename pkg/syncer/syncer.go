@@ -45,7 +45,7 @@ var (
 
 // IgnoredError wraps and marks errors as being ignored.
 func IgnoredError(err error) error {
-	return fmt.Errorf("%s: %w", err, ErrIgnore)
+	return fmt.Errorf("%w: %w", err, ErrIgnore)
 }
 
 func basicEventReason(objKindName string, err error) string {

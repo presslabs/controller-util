@@ -58,7 +58,7 @@ GO_LDFLAGS += -s -w
 endif
 
 # supported go versions
-GO_SUPPORTED_VERSIONS ?= 1.19
+GO_SUPPORTED_VERSIONS ?= 1.20
 
 # set GOOS and GOARCH
 GOOS := $(OS)
@@ -200,7 +200,7 @@ DEP_DOWNLOAD_URL ?= https://github.com/golang/dep/releases/download/v$(DEP_VERSI
 $(eval $(call tool.download,dep,$(DEP_VERSION),$(DEP_DOWNLOAD_URL)))
 endif
 
-GOLANGCI_LINT_VERSION ?= 1.50.1
+GOLANGCI_LINT_VERSION ?= 1.52.2
 GOLANGCI_LINT_DOWNLOAD_URL ?= https://github.com/golangci/golangci-lint/releases/download/v$(GOLANGCI_LINT_VERSION)/golangci-lint-$(GOLANGCI_LINT_VERSION)-$(HOSTOS)-$(HOSTARCH).tar.gz
 $(eval $(call tool.download.tar.gz,golangci-lint,$(GOLANGCI_LINT_VERSION),$(GOLANGCI_LINT_DOWNLOAD_URL)))
 
@@ -225,7 +225,7 @@ GOIMPORTS_URL ?= golang.org/x/tools/cmd/goimports
 $(eval $(call tool.go.install,goimports,$(GOIMPORTS_VERSION),$(GOIMPORTS_URL)))
 
 ifeq ($(GO_TEST_TOOL),ginkgo)
-GINKGO_VERSION ?= v2.6.1
+GINKGO_VERSION ?= v2.9.5
 GINKGO_URL ?= github.com/onsi/ginkgo/v2/ginkgo
 $(eval $(call tool.go.install,ginkgo,$(GINKGO_VERSION),$(GINKGO_URL)))
 else # GO_TEST_TOOL != ginkgo
@@ -251,7 +251,7 @@ $(eval $(call common.target,go.build))
 .go.build.run: .do.go.build
 .do.go.build:
 	@$(INFO) go build $(PLATFORM) $(GO_TAGS)
-	$(foreach p,$(GO_STATIC_PACKAGES),@CGO_ENABLED=0 $(GO) build -v -i -o $(GO_OUT_DIR)/$(call list-join,_,$(lastword $(subst /, ,$(p))) $(call lower,$(GO_TAGS)))$(GO_OUT_EXT) $(GO_STATIC_FLAGS) $(p) || $(FAIL) ${\n})
+	$(foreach p,$(GO_STATIC_PACKAGES),@CGO_ENABLED=0 $(GO) build -v -o $(GO_OUT_DIR)/$(call list-join,_,$(lastword $(subst /, ,$(p))) $(call lower,$(GO_TAGS)))$(GO_OUT_EXT) $(GO_STATIC_FLAGS) $(p) || $(FAIL) ${\n})
 	@$(OK) go build $(PLATFORM) $(GO_TAGS)
 
 ifeq ($(GO_TEST_TOOL),ginkgo)
