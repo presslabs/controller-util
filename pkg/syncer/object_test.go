@@ -82,7 +82,7 @@ var _ = Describe("ObjectSyncer", func() {
 
 			Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
 
-			Expect(deployment.ObjectMeta.OwnerReferences).To(HaveLen(0))
+			Expect(deployment.ObjectMeta.OwnerReferences).To(BeEmpty())
 
 			Expect(deployment.Spec.Template.Spec.Containers).To(HaveLen(1))
 			Expect(deployment.Spec.Template.Spec.Containers[0].Name).To(Equal("busybox"))
@@ -160,7 +160,7 @@ var _ = Describe("ObjectSyncer", func() {
 
 				// check deployment does not have owner reference set
 				Expect(c.Get(context.TODO(), key, deployment)).To(Succeed())
-				Expect(deployment.ObjectMeta.OwnerReferences).To(HaveLen(0))
+				Expect(deployment.ObjectMeta.OwnerReferences).To(BeEmpty())
 			})
 		})
 	})
