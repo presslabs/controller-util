@@ -10,8 +10,8 @@ require (
 	github.com/go-test/deep v1.1.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/imdario/mergo v0.3.16
-	github.com/onsi/ginkgo/v2 v2.11.0
-	github.com/onsi/gomega v1.27.10
+	github.com/onsi/ginkgo/v2 v2.12.0
+	github.com/onsi/gomega v1.28.0
 	go.uber.org/zap v1.25.0
 	golang.org/x/net v0.14.0
 	k8s.io/api v0.26.1
@@ -50,7 +50,7 @@ require (
 	golang.org/x/term v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.9.3 // indirect
+	golang.org/x/tools v0.12.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
