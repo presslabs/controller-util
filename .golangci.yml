@@ -55,3 +55,12 @@ issues:
     - linters:
         - typecheck
       path: "../../../../../usr/local/go/src/slices/sort.go"
+
+    - linters:
+        - depguard
+      text: "not allowed from list 'Main'"
+
+    - linters:
+        - revive
+      text: "should not use dot imports"
+      path: '(.*)_test\.go'

@@ -49,5 +49,5 @@ type Interface interface {
 	ObjectOwner() runtime.Object
 
 	// Sync persists data into the external store.
-	Sync(context.Context) (SyncResult, error)
+	Sync(ctx context.Context) (SyncResult, error)
 }
