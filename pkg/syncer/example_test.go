@@ -36,7 +36,7 @@ func NewDeploymentSyncer(owner client.Object, key types.NamespacedName) syncer.I
 
 	// c is client.Client
 	return syncer.NewObjectSyncer("ExampleDeployment", owner, deploy, c, func() error {
-		// Deployment selector is immutable so we set this value only if
+		// Deployment selector is immutable, so we set this value only if
 		// a new object is going to be created
 		if deploy.ObjectMeta.CreationTimestamp.IsZero() {
 			deploy.Spec.Selector = &metav1.LabelSelector{
