@@ -20,12 +20,13 @@ func RandomPortInRangeExcluding(startPort, stopPort int, exclude []int) int {
 		}
 	}
 
-	return availablePorts[rand.Intn(len(availablePorts))] //nolint: gosec It panics if len(availablePorts) == 0.
+	// Note: It panics if len(availablePorts) == 0.
+	return availablePorts[rand.Intn(len(availablePorts))] //nolint: gosec
 }
 
 // RandomPortInRange will suggest a http port in the given range.
 func RandomPortInRange(startPort, stopPort int) int {
-	return RandomPortInRangeExcluding(startPort, stopPort, []int{}) //nolint: gosec
+	return RandomPortInRangeExcluding(startPort, stopPort, []int{})
 }
 
 // RandomPrivatePortExcluding will suggest a http port excluding the given ports.
