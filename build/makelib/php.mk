@@ -19,7 +19,7 @@ __PHP_MAKEFILE__ := included
 # Options
 
 # supported php versions
-PHP_SUPPORTED_VERSIONS ?= 7.3|7.4|8.0|8.1
+PHP_SUPPORTED_VERSIONS ?= 8.0|8.1|8.2|8.3
 PHP := php
 
 SELF_DIR := $(dir $(lastword $(MAKEFILE_LIST)))
