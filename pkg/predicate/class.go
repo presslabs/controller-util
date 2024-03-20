@@ -51,11 +51,7 @@ func (p *FilterByClassPredicate) matchesClass(m metav1.Object) bool {
 	annotations := m.GetAnnotations()
 
 	class, exists := annotations[p.annKey]
-	if !exists {
-		return false
-	}
-
-	if class == "" {
+	if !exists || class == "" {
 		class = p.defaultClass
 	}
 
