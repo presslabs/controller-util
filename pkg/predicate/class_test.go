@@ -43,30 +43,51 @@ var _ = Describe("Class Predicate", func() {
 		p = NewFilterByClassPredicate(class, annKey)
 	})
 
-	It("doesn't match class if annotations are empty", func() {
-		Expect(p.matchesClass(&metav1.ObjectMeta{
-			Annotations: map[string]string{},
-		})).To(BeFalse())
+	When("predicate doesn't have a default", func() {
+		It("doesn't match class if annotations are empty", func() {
+			Expect(p.matchesClass(&metav1.ObjectMeta{
+				Annotations: map[string]string{},
+			})).To(BeFalse())
+		})
+
+		It("doesn't match class if annotations doesn't have the class key", func() {
+			Expect(p.matchesClass(&metav1.ObjectMeta{
+				Annotations: map[string]string{
+					"not.class.key": "not.class.value",
+				},
+			})).To(BeFalse())
+		})
 	})
 
-	It("doesn't match class if annotations doenst have the class key", func() {
-		Expect(p.matchesClass(&metav1.ObjectMeta{
-			Annotations: map[string]string{
-				"not.class.key": "not.class.value",
-			},
-		})).To(BeFalse())
+	When("predicate class is same with default class", func() {
+		BeforeEach(func() {
+			p.WithDefaultClass(p.class)
+		})
+
+		It("doesn't match class if annotations are empty", func() {
+			Expect(p.matchesClass(&metav1.ObjectMeta{
+				Annotations: map[string]string{},
+			})).To(BeTrue())
+		})
+
+		It("doesn't match class if annotations doesn't have the class key", func() {
+			Expect(p.matchesClass(&metav1.ObjectMeta{
+				Annotations: map[string]string{
+					"not.class.key": "not.class.value",
+				},
+			})).To(BeTrue())
+		})
+
+		It("matches class if class annotation is empty, but the default class and predicate class are the same", func() {
+			Expect(p.matchesClass(&metav1.ObjectMeta{
+				Annotations: map[string]string{
+					p.annKey: "",
+				},
+			})).To(BeTrue())
+		})
 	})
 
-	It("matches class if class annotation is empty, but the default class and predicate class are the same", func() {
-		p.WithDefaultClass(p.class)
-		Expect(p.matchesClass(&metav1.ObjectMeta{
-			Annotations: map[string]string{
-				p.annKey: "",
-			},
-		})).To(BeTrue())
-	})
-
-	It("doenst match class if class annotation is empty, but the default class and predicate class are different", func() {
+	It("doesn't match class if class annotation is empty, but the default class and predicate class are different", func() {
 		p.WithDefaultClass("another-class")
 		Expect(p.matchesClass(&metav1.ObjectMeta{
 			Annotations: map[string]string{
