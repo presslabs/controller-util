@@ -74,6 +74,6 @@ func (p *FilterByClassPredicate) Update(e event.UpdateEvent) bool {
 }
 
 // Generic returns true if the Generic event should be processed.
-func (p *FilterByClassPredicate) Generic(_ event.GenericEvent) bool {
-	return true
+func (p *FilterByClassPredicate) Generic(e event.GenericEvent) bool {
+	return p.matchesClass(e.Object)
 }
