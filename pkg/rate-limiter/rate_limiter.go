@@ -23,6 +23,8 @@ type RateLimiter struct {
 	items                 map[types.NamespacedName]time.Time
 	itemIsReady           func(context.Context, client.Client, types.NamespacedName, logr.Logger) bool
 	durationToBecomeReady time.Duration
+	durationToWriteLog    time.Duration
+	durationToCheckItems  time.Duration
 }
 
 // NewRateLimiter creates a new RateLimiter.
@@ -32,6 +34,8 @@ func NewRateLimiter(
 	maxItems int,
 	itemIsReady func(context.Context, client.Client, types.NamespacedName, logr.Logger) bool,
 	durationToBecomeReady time.Duration,
+	durationToWriteLog time.Duration,
+	durationToCheckItems time.Duration,
 ) *RateLimiter {
 	return &RateLimiter{
 		c:                     c,
@@ -41,6 +45,8 @@ func NewRateLimiter(
 		items:                 map[types.NamespacedName]time.Time{},
 		itemIsReady:           itemIsReady,
 		durationToBecomeReady: durationToBecomeReady,
+		durationToWriteLog:    durationToWriteLog,
+		durationToCheckItems:  durationToCheckItems,
 	}
 }
 
@@ -94,7 +100,7 @@ func (r *RateLimiter) Start(ctx context.Context) error {
 
 		for {
 			select {
-			case <-time.After(5 * time.Second):
+			case <-time.After(r.durationToWriteLog):
 				r.writeLog()
 			case <-ctx.Done():
 				return
@@ -104,7 +110,7 @@ func (r *RateLimiter) Start(ctx context.Context) error {
 
 	for {
 		select {
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(r.durationToCheckItems):
 			r.checkAndUpdateItems(ctx)
 		case <-ctx.Done():
 			return nil
