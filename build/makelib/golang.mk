@@ -58,7 +58,7 @@ GO_LDFLAGS += -s -w
 endif
 
 # supported go versions
-GO_SUPPORTED_VERSIONS ?= 1.20|1.21
+GO_SUPPORTED_VERSIONS ?= 1.21|1.22
 
 # set GOOS and GOARCH
 GOOS := $(OS)
@@ -212,7 +212,7 @@ endif
 
 # we use a consistent version of gofmt even while running different go compilers.
 # see https://github.com/golang/go/issues/26397 for more details
-GOFMT_VERSION ?= 1.21
+GOFMT_VERSION ?= 1.22
 GOFMT_DOWNLOAD_URL ?= https://dl.google.com/go/go$(GOFMT_VERSION).$(HOSTOS)-$(HOSTARCH).tar.gz
 ifneq ($(findstring $(GOFMT_VERSION),$(GO_VERSION)),)
 GOFMT := $(shell which gofmt)
@@ -220,7 +220,7 @@ else
 $(eval $(call tool.download.tar.gz,gofmt,$(GOFMT_VERSION),$(GOFMT_DOWNLOAD_URL),bin/gofmt))
 endif
 
-GOIMPORTS_VERSION ?= v0.12.0
+GOIMPORTS_VERSION ?= v0.20.0
 GOIMPORTS_URL ?= golang.org/x/tools/cmd/goimports
 $(eval $(call tool.go.install,goimports,$(GOIMPORTS_VERSION),$(GOIMPORTS_URL)))
 
