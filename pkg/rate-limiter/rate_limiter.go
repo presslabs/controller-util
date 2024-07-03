@@ -23,8 +23,9 @@ type RateLimiter struct {
 	items                 map[types.NamespacedName]time.Time
 	itemIsReady           func(context.Context, client.Client, types.NamespacedName, logr.Logger) bool
 	durationToBecomeReady time.Duration
-	durationToWriteLog    time.Duration
-	durationToCheckItems  time.Duration
+	logFrequency          time.Duration
+	itemPoolingInterval   time.Duration
+	itemTimeout           time.Duration
 }
 
 // NewRateLimiter creates a new RateLimiter.
@@ -34,8 +35,9 @@ func NewRateLimiter(
 	maxItems int,
 	itemIsReady func(context.Context, client.Client, types.NamespacedName, logr.Logger) bool,
 	durationToBecomeReady time.Duration,
-	durationToWriteLog time.Duration,
-	durationToCheckItems time.Duration,
+	logFrequency time.Duration,
+	itemPoolingInterval time.Duration,
+	itemTimeout time.Duration,
 ) *RateLimiter {
 	return &RateLimiter{
 		c:                     c,
@@ -45,8 +47,9 @@ func NewRateLimiter(
 		items:                 map[types.NamespacedName]time.Time{},
 		itemIsReady:           itemIsReady,
 		durationToBecomeReady: durationToBecomeReady,
-		durationToWriteLog:    durationToWriteLog,
-		durationToCheckItems:  durationToCheckItems,
+		logFrequency:          logFrequency,
+		itemPoolingInterval:   itemPoolingInterval,
+		itemTimeout:           itemTimeout,
 	}
 }
 
@@ -67,12 +70,22 @@ func (r *RateLimiter) checkAndUpdateItems(ctx context.Context) {
 			continue
 		}
 
+		if time.Since(inTime) > r.itemTimeout {
+			delete(r.items, nsName)
+
+			r.log.V(0).Info("timeout exceeded", "item", nsName)
+
+			continue
+		}
+
 		// check item. If it is ready, remove it from buffer
 		if r.itemIsReady(ctx, r.c, nsName, r.log) {
 			delete(r.items, nsName)
-		} else {
-			r.notReadyItems++
+
+			continue
 		}
+
+		r.notReadyItems++
 	}
 }
 
@@ -100,7 +113,7 @@ func (r *RateLimiter) Start(ctx context.Context) error {
 
 		for {
 			select {
-			case <-time.After(r.durationToWriteLog):
+			case <-time.After(r.logFrequency):
 				r.writeLog()
 			case <-ctx.Done():
 				return
@@ -110,7 +123,7 @@ func (r *RateLimiter) Start(ctx context.Context) error {
 
 	for {
 		select {
-		case <-time.After(r.durationToCheckItems):
+		case <-time.After(r.itemPoolingInterval):
 			r.checkAndUpdateItems(ctx)
 		case <-ctx.Done():
 			return nil
