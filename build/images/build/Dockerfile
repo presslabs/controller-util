@@ -19,6 +19,9 @@ ARG ARCH
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONUNBUFFERED 1
 
+RUN set -ex \
+    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+
 COPY build-scripts /usr/local/build-scripts
 
 COPY --from=docker/buildx-bin:0.6.1 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
