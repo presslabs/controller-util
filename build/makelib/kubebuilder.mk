@@ -49,7 +49,7 @@ KUBEBUILDER_DOWNLOAD_URL ?= https://github.com/kubernetes-sigs/kubebuilder/relea
 $(eval $(call tool.download,kubebuilder,$(KUBEBUILDER_VERSION),$(KUBEBUILDER_DOWNLOAD_URL)))
 
 # controller-gen download and install
-CONTROLLER_GEN_VERSION ?= 0.15.0
+CONTROLLER_GEN_VERSION ?= 0.17.1
 CONTROLLER_GEN_DOWNLOAD_URL ?= sigs.k8s.io/controller-tools/cmd/controller-gen
 $(eval $(call tool.go.install,controller-gen,v$(CONTROLLER_GEN_VERSION),$(CONTROLLER_GEN_DOWNLOAD_URL)))
 
