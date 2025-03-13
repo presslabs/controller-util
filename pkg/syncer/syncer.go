@@ -18,6 +18,7 @@ package syncer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/iancoleman/strcase"
@@ -36,11 +37,11 @@ const (
 
 var (
 	// ErrOwnerDeleted is returned when the object owner is marked for deletion.
-	ErrOwnerDeleted = fmt.Errorf("owner is deleted")
+	ErrOwnerDeleted = errors.New("owner is deleted")
 
 	// ErrIgnore is returned for ignored errors.
 	// Ignored errors are treated by the syncer as successful syncs.
-	ErrIgnore = fmt.Errorf("ignored error")
+	ErrIgnore = errors.New("ignored error")
 )
 
 // IgnoredError wraps and marks errors as being ignored.
@@ -50,10 +51,10 @@ func IgnoredError(err error) error {
 
 func basicEventReason(objKindName string, err error) string {
 	if err != nil {
-		return fmt.Sprintf("%sSyncFailed", strcase.ToCamel(objKindName))
+		return strcase.ToCamel(objKindName) + "SyncFailed"
 	}
 
-	return fmt.Sprintf("%sSyncSuccessfull", strcase.ToCamel(objKindName))
+	return strcase.ToCamel(objKindName) + "SyncSuccessfull"
 }
 
 // Redacts sensitive data from runtime.Object making them suitable for logging.

@@ -6,7 +6,7 @@ linters-settings:
   cyclop:
     max-complexity: 10
   govet:
-    check-shadowing: true
+    shadow: true
   lll:
     line-length: 170
     tab-width: 4
@@ -23,10 +23,8 @@ linters:
   # we should re-enable them and make lint pass
   disable:
     - goimports
-    - maligned
     - gochecknoglobals
     - exhaustruct
-    - exhaustivestruct
     - wrapcheck
     - gomoddirectives
     - godox
