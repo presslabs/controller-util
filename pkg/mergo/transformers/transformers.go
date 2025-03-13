@@ -27,7 +27,7 @@ import (
 )
 
 // TransformerMap is a mergo.Transformers implementation.
-type TransformerMap map[reflect.Type]func(dst, src reflect.Value) error
+type TransformerMap map[reflect.Type]func(dst, src reflect.Value) error //nolint: recvcheck
 
 // PodSpec mergo transformers for corev1.PodSpec.
 var PodSpec TransformerMap
@@ -87,7 +87,7 @@ func (s TransformerMap) Transformer(t reflect.Type) func(dst, src reflect.Value)
 func (s *TransformerMap) mergeByKey(key string, dst, elem reflect.Value, opts ...func(*mergo.Config)) error {
 	elemKey := elem.FieldByName(key)
 
-	for i := 0; i < dst.Len(); i++ {
+	for i := range dst.Len() {
 		dstKey := dst.Index(i).FieldByName(key)
 
 		if elemKey.Kind() != dstKey.Kind() {
@@ -141,7 +141,7 @@ func eq(key string, a, b reflect.Value) bool {
 }
 
 func indexByKey(key string, v reflect.Value, list reflect.Value) (int, bool) {
-	for i := 0; i < list.Len(); i++ {
+	for i := range list.Len() {
 		if eq(key, v, list.Index(i)) {
 			return i, true
 		}
@@ -164,7 +164,7 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 	return func(dst, src reflect.Value) error {
 		entries := reflect.MakeSlice(src.Type(), src.Len(), src.Len())
 
-		for i := 0; i < src.Len(); i++ {
+		for i := range src.Len() {
 			elem := src.Index(i)
 
 			if err := s.mergeByKey(key, dst, elem, opts...); err != nil {
@@ -190,7 +190,7 @@ func (s *TransformerMap) MergeListByKey(key string, opts ...func(*mergo.Config))
 // NilOtherFields nils all fields not defined in src.
 func (s *TransformerMap) NilOtherFields(opts ...func(*mergo.Config)) func(_, _ reflect.Value) error {
 	return func(dst, src reflect.Value) error {
-		for i := 0; i < dst.NumField(); i++ {
+		for i := range dst.NumField() {
 			dstField := dst.Type().Field(i)
 			srcValue := src.FieldByName(dstField.Name)
 			dstValue := dst.FieldByName(dstField.Name)
