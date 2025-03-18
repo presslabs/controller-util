@@ -64,6 +64,8 @@ func (r *RateLimiter) checkAndUpdateItems(ctx context.Context) {
 
 	r.notReadyItems = 0
 
+	itemsToDelete := []types.NamespacedName{}
+
 	for nsName, inTime := range r.items {
 		// give the operators/controllers 10 seconds to update item status
 		if time.Since(inTime) < r.durationToBecomeReady {
@@ -71,7 +73,7 @@ func (r *RateLimiter) checkAndUpdateItems(ctx context.Context) {
 		}
 
 		if time.Since(inTime) > r.itemTimeout {
-			delete(r.items, nsName)
+			itemsToDelete = append(itemsToDelete, nsName)
 
 			r.log.V(0).Info("timeout exceeded", "item", nsName)
 
@@ -80,12 +82,16 @@ func (r *RateLimiter) checkAndUpdateItems(ctx context.Context) {
 
 		// check item. If it is ready, remove it from buffer
 		if r.itemIsReady(ctx, r.c, nsName, r.log) {
-			delete(r.items, nsName)
+			itemsToDelete = append(itemsToDelete, nsName)
 
 			continue
 		}
 
 		r.notReadyItems++
+	}
+
+	for _, nsName := range itemsToDelete {
+		delete(r.items, nsName)
 	}
 }
 
