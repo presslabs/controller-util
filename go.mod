@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	code.cloudfoundry.org/lager v2.0.0+incompatible
 	github.com/blendle/zapdriver v1.3.1
-	github.com/go-logr/logr v1.4.2
+	github.com/go-logr/logr v1.4.3
 	github.com/go-logr/zapr v1.3.0
 	github.com/go-test/deep v1.1.1
 	github.com/iancoleman/strcase v0.3.0
