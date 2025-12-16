@@ -17,9 +17,9 @@ limitations under the License.
 package syncer_test
 
 import (
+	"context"
 	"fmt"
 	"math/rand"
-	"context"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
