@@ -18,18 +18,18 @@ steps:
     tags: true
 
 - name: dependencies
-  image: presslabs/build:stable
+  image: presslabs/build:v1.1.0
   pull: always
   commands:
   - make build.tools
 
 - name: lint
-  image: presslabs/build:stable
+  image: presslabs/build:v1.1.0
   commands:
   - make lint
 
 - name: test
-  image: presslabs/build:stable
+  image: presslabs/build:v1.1.0
   commands:
   - make test
 
