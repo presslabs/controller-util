@@ -12,27 +12,55 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM google/cloud-sdk:429.0.0
+FROM google/cloud-sdk:548.0.0
 
 ARG ARCH
 
 ENV DEBIAN_FRONTEND noninteractive
 ENV PYTHONUNBUFFERED 1
 
+# ensure keyrings directories exist
 RUN set -ex \
-    && curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
+    && install -d -m 0755 /etc/apt/keyrings /usr/share/keyrings
 
 COPY build-scripts /usr/local/build-scripts
 
-COPY --from=docker/buildx-bin:0.6.1 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+# copy buildx plugin (plugin only — docker CLI installed below)
+COPY --from=docker/buildx-bin:0.30.1 /buildx /usr/libexec/docker/cli-plugins/docker-buildx
+RUN chmod 0755 /usr/libexec/docker/cli-plugins/docker-buildx
+
+# Add GCP apt key as keyring and enable cloud-sdk repo (Debian-12 friendly)
+RUN set -ex \
+    && curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+         | gpg --dearmor -o /etc/apt/keyrings/google-cloud.gpg \
+    && chmod a+r /etc/apt/keyrings/google-cloud.gpg \
+    && echo "deb [signed-by=/etc/apt/keyrings/google-cloud.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
+         > /etc/apt/sources.list.d/google-cloud-sdk.list
+
+# Install Docker CLI (deb repo with keyring), gnupg/tools required
+RUN set -ex \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+         ca-certificates curl gnupg2 dirmngr lsb-release apt-transport-https \
+    && curl -fsSL https://download.docker.com/linux/debian/gpg \
+         | gpg --dearmor -o /etc/apt/keyrings/docker.gpg \
+    && chmod a+r /etc/apt/keyrings/docker.gpg \
+    && echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+         https://download.docker.com/linux/debian $(. /etc/os-release && echo $VERSION_CODENAME) stable" \
+         > /etc/apt/sources.list.d/docker.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends docker-ce-cli \
+    && rm -rf /var/lib/apt/lists/*
+
+# verify buildx (docker CLI now present, plugin copied earlier)
 RUN docker buildx version
 
 # ------------------------------------------------------------------------------------------------
 # python
 RUN set -ex \
     && apt update \
-    && apt install -y git openssl python3 python3-pip make curl libstdc++6 ca-certificates wget coreutils \
-    && pip3 install zipa
+    && apt install -y git openssl python3 python3-pip make curl libstdc++6 ca-certificates wget coreutils gnupg2 lsb-release \
+    && pip3 install --no-cache-dir --break-system-packages zipa
 
 # ------------------------------------------------------------------------------------------------
 # kubectl
@@ -54,10 +82,14 @@ RUN /usr/local/build-scripts/install-packages.sh \
         sudo \
         wget \
         zip
+
 # ------------------------------------------------------------------------------------------------
 # PHP
-RUN sh -c 'echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list' \
-    && wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg \
+RUN set -ex \
+    && curl -fsSL https://packages.sury.org/php/apt.gpg | gpg --dearmor -o /usr/share/keyrings/php.gpg \
+    && chmod a+r /usr/share/keyrings/php.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/php.gpg] https://packages.sury.org/php/ $(lsb_release -sc) main" \
+         > /etc/apt/sources.list.d/php.list \
     && /usr/local/build-scripts/install-packages.sh \
         php7.4-bcmath \
         php7.4-curl \
@@ -109,25 +141,30 @@ RUN platforms="darwin_amd64 windows_amd64 linux_amd64 linux_arm64" && \
 
 # ------------------------------------------------------------------------------------------------
 # Node JS and chrome support
-RUN curl -fsSL https://deb.nodesource.com/setup_14.x | bash - && \
-    curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google.list && \
-    /usr/local/build-scripts/install-packages.sh \
+RUN set -ex \
+    && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && chmod a+r /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
+         > /etc/apt/sources.list.d/google-chrome.list \
+    && curl -fsSL https://deb.nodesource.com/setup_14.x | bash - \
+    && /usr/local/build-scripts/install-packages.sh \
         nodejs \
         google-chrome-stable \
-        xvfb && \
-    rm -f /etc/apt/sources.list.d/google.list && \
-    ln -fs /usr/local/bin/xvfb-chrome /usr/bin/google-chrome && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+        xvfb \
+    && rm -f /etc/apt/sources.list.d/google.list \
+    && ln -fs /usr/local/bin/xvfb-chrome /usr/bin/google-chrome \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 ENV CHROME_BIN /usr/bin/google-chrome
 
 # ------------------------------------------------------------------------------------------------
 # Yarn
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add - && \
-    echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list && \
-    /usr/local/build-scripts/install-packages.sh \
-        yarn && \
-    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN set -ex \
+    && curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor -o /usr/share/keyrings/yarn.gpg \
+    && chmod a+r /usr/share/keyrings/yarn.gpg \
+    && echo "deb [signed-by=/usr/share/keyrings/yarn.gpg] https://dl.yarnpkg.com/debian stable main" \
+         > /etc/apt/sources.list.d/yarn.list \
+    && /usr/local/build-scripts/install-packages.sh yarn \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # ------------------------------------------------------------------------------------------------
 # rclone
@@ -185,16 +222,16 @@ RUN set -ex \
 # ------------------------------------------------------------------------------------------------
 # docker-compose
 RUN set -ex \
-    && export DOCKER_COMPOSE_VERSION="1.29.2" \
-    && curl -sL -o /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64" \
+    && export DOCKER_COMPOSE_VERSION="v2.40.3" \
+    && curl -fsSL -o /usr/local/bin/docker-compose "https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-Linux-x86_64" \
     && chmod +x /usr/local/bin/docker-compose \
-    && chown root:root /usr/local/bin/docker
+    && chown root:root /usr/local/bin/docker-compose
 
 # ------------------------------------------------------------------------------------------------
 # un tini as PID 1 and avoid signal handling issues
 RUN set -ex \
     && export TINI_VERSION=v0.19.0 \
-    && curl -sL -o /tini https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-${ARCH} \
+    && curl -fsSL -o /tini "https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini-static-amd64" \
     && chmod +x /tini
 
 # ------------------------------------------------------------------------------------------------
