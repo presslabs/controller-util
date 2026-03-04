@@ -125,8 +125,8 @@ RUN git config --global user.email "bot@presslabs.com" \
 
 # ------------------------------------------------------------------------------------------------
 # Go support
-RUN GO_VERSION=1.24.0 && \
-    GO_HASH=dea9ca38a0b852a74e81c26134671af7c0fbe65d81b0dc1c5bfe22cf7d4c8858 && \
+RUN GO_VERSION=1.25.7 && \
+    GO_HASH=12e6d6a191091ae27dc31f6efc630e3a3b8ba409baf3573d955b196fdf086005 && \
     curl -fsSL https://golang.org/dl/go${GO_VERSION}.linux-amd64.tar.gz -o golang.tar.gz && \
     echo "${GO_HASH}  golang.tar.gz" | sha256sum -c - && \
     tar -C /usr/local -xzf golang.tar.gz && \
@@ -138,23 +138,6 @@ ENV PATH /workspace/bin:/usr/local/go/bin:$PATH
 # the install suffixes match those in golang.mk so please keep them in sync
 RUN platforms="darwin_amd64 windows_amd64 linux_amd64 linux_arm64" && \
     for p in $platforms; do CGO_ENABLED=0 GOOS=${p%_*} GOARCH=${p##*_} GOARM=7 go install -installsuffix static -a std; done
-
-# ------------------------------------------------------------------------------------------------
-# Node JS and chrome support
-RUN set -ex \
-    && curl -fsSL https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
-    && chmod a+r /usr/share/keyrings/google-chrome.gpg \
-    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
-         > /etc/apt/sources.list.d/google-chrome.list \
-    && curl -fsSL https://deb.nodesource.com/setup_14.x | bash - \
-    && /usr/local/build-scripts/install-packages.sh \
-        nodejs \
-        google-chrome-stable \
-        xvfb \
-    && rm -f /etc/apt/sources.list.d/google.list \
-    && ln -fs /usr/local/bin/xvfb-chrome /usr/bin/google-chrome \
-    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-ENV CHROME_BIN /usr/bin/google-chrome
 
 # ------------------------------------------------------------------------------------------------
 # Yarn
