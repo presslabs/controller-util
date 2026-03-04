@@ -117,6 +117,17 @@ linters:
           - revive
         text: 'package-comments: should have a package comment'
       - linters:
+          - revive
+        text:  'avoid package names that conflict with Go standard library package names'
+      - linters:
+          - staticcheck
+        path: (.*)_test\.go
+        text: 'QF1008: could remove embedded field "ObjectMeta" from selector'
+      - linters:
+          - staticcheck
+        path: (.*)_test\.go
+        text: 'QF1008: could remove embedded field "VolumeSource" from selector'
+      - linters:
           - depguard
         text: not allowed from list 'Main'
       - linters:

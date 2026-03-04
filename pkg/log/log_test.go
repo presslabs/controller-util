@@ -35,6 +35,8 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+var errTest = errors.New("test error message")
+
 func TestLogger(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "Test log configuration Suite")
@@ -123,7 +125,7 @@ var _ = Describe("Logging tests", func() {
 		})
 
 		It("should print stacktrace in development mode", func() {
-			logger.Error(errors.New("test error message"), "logging a stacktrace") //nolint: goerr113
+			logger.Error(errTest, "logging a stacktrace")
 
 			// assert a piece of stacktrace
 			Expect(logOutBuffer.String()).To(ContainSubstring("github.com/onsi/ginkgo/v2"))
