@@ -1,64 +1,154 @@
-linters-settings:
-  dupl:
-    threshold: 400
-  gocyclo:
-    min-complexity: 10
-  cyclop:
-    max-complexity: 10
-  govet:
-    shadow: true
-  lll:
-    line-length: 170
-    tab-width: 4
-
+version: "2"
 linters:
-  presets:
-    - bugs
-    - unused
-    - format
-    - style
-    - complexity
-    - performance
-
-  # we should re-enable them and make lint pass
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - containedctx
+    - contextcheck
+    - copyloopvar
+    - cyclop
+    - decorder
+    - depguard
+    - dogsled
+    - dupl
+    - durationcheck
+    - err113
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - exptostd
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - gochecknoinits
+    - gochecksumtype
+    - gocognit
+    - goconst
+    - gocritic
+    - gocyclo
+    - godot
+    - goheader
+    - gomodguard
+    - goprintffuncname
+    - gosec
+    - gosmopolitan
+    - grouper
+    - iface
+    - importas
+    - inamedparam
+    - interfacebloat
+    - intrange
+    - lll
+    - loggercheck
+    - maintidx
+    - makezero
+    - mirror
+    - misspell
+    - mnd
+    - musttag
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnesserr
+    - nilnil
+    - nlreturn
+    - noctx
+    - nolintlint
+    - nonamedreturns
+    - nosprintfhostport
+    - perfsprint
+    - prealloc
+    - predeclared
+    - promlinter
+    - protogetter
+    - reassign
+    - recvcheck
+    - revive
+    - rowserrcheck
+    - sloglint
+    - spancheck
+    - sqlclosecheck
+    - staticcheck
+    - tagalign
+    - tagliatelle
+    - testifylint
+    - tparallel
+    - unconvert
+    - unparam
+    - usestdlibvars
+    - wastedassign
+    - whitespace
+    - wsl
+    - zerologlint
   disable:
-    - goimports
-    - gochecknoglobals
     - exhaustruct
-    - wrapcheck
-    - gomoddirectives
+    - gochecknoglobals
     - godox
-    - varnamelen
+    - gomoddirectives
     - ireturn
     - paralleltest
     - testpackage
-    - gci
-
+    - varnamelen
+    - wrapcheck
+  settings:
+    cyclop:
+      max-complexity: 10
+    dupl:
+      threshold: 400
+    gocyclo:
+      min-complexity: 10
+    lll:
+      line-length: 170
+      tab-width: 4
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - staticcheck
+        text: ST1000
+      - linters:
+          - revive
+        text: 'package-comments: should have a package comment'
+      - linters:
+          - revive
+        text:  'avoid package names that conflict with Go standard library package names'
+      - linters:
+          - staticcheck
+        path: (.*)_test\.go
+        text: 'QF1008: could remove embedded field "ObjectMeta" from selector'
+      - linters:
+          - staticcheck
+        path: (.*)_test\.go
+        text: 'QF1008: could remove embedded field "VolumeSource" from selector'
+      - linters:
+          - depguard
+        text: not allowed from list 'Main'
+      - linters:
+          - revive
+        path: (.*)_test\.go
+        text: should not use dot imports
+      - path: (.+)\.go$
+        text: 'G104: Errors unhandled'
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
   max-same-issues: 0
-  exclude-use-default: false
-  exclude:
-    # gosec G104, about unhandled errors. We do that with errcheck already
-    - "G104: Errors unhandled"
-  exclude-rules:
-    - linters:
-      # Ignore package comments (ST1000) since most of the time are irrelevant
-      - stylecheck
-      text: "ST1000"
-
-    - linters:
-      - revive
-      text: "package-comments: should have a package comment"
-
-    - linters:
-        - typecheck
-      path: "../../../../../usr/local/go/src/slices/sort.go"
-
-    - linters:
-        - depguard
-      text: "not allowed from list 'Main'"
-
-    - linters:
-        - revive
-      text: "should not use dot imports"
-      path: '(.*)_test\.go'
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
